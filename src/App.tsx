@@ -2,6 +2,10 @@ import { Routes, Route } from 'react-router-dom';
 import styled from 'styled-components';
 import TabBar from './components/TabBar';
 import Rankings from './pages/Rankings';
+import Feed from './pages/Feed';
+import Vote from './pages/Vote';
+import Friends from './pages/Friends';
+import Profile from './pages/Profile';
 
 // Import your components here
 // import Rankings from './pages/Rankings';
@@ -22,10 +26,10 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={<Rankings />} />
-        <Route path="/feed" element={<Placeholder>Feed coming soon...</Placeholder>} />
-        <Route path="/vote" element={<Placeholder>Vote coming soon...</Placeholder>} />
-        <Route path="/friends" element={<Placeholder>Friends coming soon...</Placeholder>} />
-        <Route path="/profile" element={<Placeholder>Profile coming soon...</Placeholder>} />
+        <Route path="/feed" element={<Feed />} />
+        <Route path="/vote" element={<Vote />} />
+        <Route path="/friends" element={<Friends />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
       <TabBar />
     </>
