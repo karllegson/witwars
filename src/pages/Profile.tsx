@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { auth } from '../firebase';
+import { signOut } from 'firebase/auth';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
 import RetroButton from '../components/RetroButton';
-import { loadProfile, saveProfile } from '../utils/storage';
-import { Person } from '../types/person';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -27,6 +29,7 @@ const LoadingText = styled.div`
 
 const Content = styled.div`
   padding: 16px;
+  color: #fff;
 `;
 
 const FormSection = styled.div`
@@ -97,65 +100,73 @@ const StatsValue = styled.div`
   color: #fff;
 `;
 
-export default function Profile() {
-  const [profile, setProfile] = useState<Person | null>(null);
-  const [name, setName] = useState('');
-  const [bio, setBio] = useState('');
-  const [joke, setJoke] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [ipAddress, setIpAddress] = useState<string | null>(null);
+const AuthPromptContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  font-family: 'VT323', monospace;
+`;
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const profileData = await loadProfile();
-        if (profileData) {
-          setProfile(profileData);
-          setName(profileData.name);
-          setBio(profileData.bio || '');
-          setJoke(profileData.joke || '');
-        }
-        // IP address is not implemented for web, so leave as null
-      } catch (error) {
-        console.error('Failed to load profile:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+const AuthPromptText = styled.p`
+  font-size: 20px;
+  color: #ffcc00;
+  margin-bottom: 20px;
+`;
 
-  const handleSaveProfile = async () => {
-    if (!name.trim()) {
-      alert('Name cannot be empty');
-      return;
-    }
+const AuthButtonContainer = styled.div`
+  display: flex;
+  gap: 20px;
+`;
+
+const UserInfo = styled.div`
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: #ccc;
+  margin-bottom: 20px;
+`;
+
+const ProfilePage: React.FC = () => {
+  const { currentUser, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
     try {
-      const profileData: Person = {
-        id: profile?.id || Date.now().toString(),
-        name: name.trim(),
-        votes: profile?.votes || 0,
-        bio: bio.trim(),
-        joke: joke.trim(),
-        ipAddress: ipAddress || undefined,
-      };
-      await saveProfile(profileData);
-      setProfile(profileData);
-      alert('Profile saved successfully');
+      await signOut(auth);
+      navigate('/');
     } catch (error) {
-      console.error('Failed to save profile:', error);
-      alert('Failed to save profile');
+      console.error("Logout error:", error);
+      alert("Failed to logout.");
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <Container>
         <Header title="COMEDY KINGS" subtitle="YOUR PROFILE" />
         <RetroWindow title="PROFILE.EXE">
-          <LoadingContainer>
-            <LoadingText>LOADING...</LoadingText>
-          </LoadingContainer>
+          <Content>
+            <p>Loading authentication status...</p>
+          </Content>
+        </RetroWindow>
+      </Container>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <Container>
+        <Header title="COMEDY KINGS" subtitle="JOIN THE STAGE" />
+        <RetroWindow title="ACCESS.DENIED">
+          <AuthPromptContainer>
+            <AuthPromptText>You need to be logged in to view your profile.</AuthPromptText>
+            <AuthButtonContainer>
+              <RetroButton title="LOGIN" onClick={() => navigate('/login')} />
+              <RetroButton title="REGISTER" onClick={() => navigate('/register')} />
+            </AuthButtonContainer>
+          </AuthPromptContainer>
         </RetroWindow>
       </Container>
     );
@@ -163,53 +174,17 @@ export default function Profile() {
 
   return (
     <Container>
-      <Header title="COMEDY KINGS" subtitle="YOUR PROFILE" />
-      <RetroWindow title="PROFILE.EXE">
+      <Header title="COMEDY KINGS" subtitle={`WELCOME, ${currentUser.displayName || currentUser.email}!`}/>
+      <RetroWindow title={`${currentUser.email}.USR`}>
         <Content>
-          <FormSection>
-            <Label>YOUR NAME:</Label>
-            <Input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Enter your name"
-            />
-          </FormSection>
-          <FormSection>
-            <Label>YOUR BIO:</Label>
-            <TextArea
-              value={bio}
-              onChange={e => setBio(e.target.value)}
-              placeholder="Tell us about yourself"
-            />
-          </FormSection>
-          <FormSection>
-            <Label>YOUR BEST JOKE:</Label>
-            <TextArea
-              value={joke}
-              onChange={e => setJoke(e.target.value)}
-              placeholder="Share your funniest joke"
-            />
-          </FormSection>
-          {profile && (
-            <StatsSection>
-              <StatsTitle>YOUR STATS:</StatsTitle>
-              <StatsRow>
-                <StatsLabel>Current Votes:</StatsLabel>
-                <StatsValue>{profile.votes}</StatsValue>
-              </StatsRow>
-              <StatsRow>
-                <StatsLabel>IP Address:</StatsLabel>
-                <StatsValue>{ipAddress || 'Unknown'}</StatsValue>
-              </StatsRow>
-            </StatsSection>
-          )}
-          <RetroButton
-            title="SAVE PROFILE"
-            onClick={handleSaveProfile}
-            style={{ marginBottom: 32 }}
-          />
+          <UserInfo>Email: {currentUser.email}</UserInfo>
+          <UserInfo>UID: {currentUser.uid}</UserInfo>
+          <p>Profile editing and stats from Firestore coming soon!</p>
+          <RetroButton title="LOGOUT" onClick={handleLogout} style={{ marginTop: 20 }}/>
         </Content>
       </RetroWindow>
     </Container>
   );
-} 
+};
+
+export default ProfilePage; 
