@@ -168,7 +168,28 @@ export const getFriends = async (userId: string): Promise<UserProfile[]> => {
 
 // Wrapper function that matches the parameter signature used in Friends.tsx
 export const removeFriend = async (currentUserId: string, friendUid: string): Promise<void> => {
-  // We only need the friendUid for the Cloud Function call
-  // currentUserId is verified inside the removeFriendTwoSided function
-  return removeFriendTwoSided(friendUid);
+  const currentUser = auth.currentUser;
+  if (!currentUser) throw new Error("Not authenticated");
+  if (currentUser.uid !== currentUserId) throw new Error("User ID mismatch");
+  
+  try {
+    // Get references to both user documents
+    const currentUserRef = doc(db, 'users', currentUserId);
+    const friendUserRef = doc(db, 'users', friendUid);
+    
+    // Remove the friend from the current user's friends list
+    await updateDoc(currentUserRef, {
+      friends: arrayRemove(friendUid)
+    });
+    
+    // Remove the current user from the friend's friends list
+    await updateDoc(friendUserRef, {
+      friends: arrayRemove(currentUserId)
+    });
+    
+    console.log('Friend removed successfully');
+  } catch (error) {
+    console.error('Error removing friend:', error);
+    throw new Error("Failed to remove friend. Please try again.");
+  }
 };
