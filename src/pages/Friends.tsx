@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
 import { useAuth } from '../contexts/AuthContext';
-import { UserProfile, getFriends, getFriendRequests, sendFriendRequest, acceptFriendRequest } from '../utils/friendService';
+import { UserProfile, getFriends, getFriendRequests, sendFriendRequest, acceptFriendRequest, removeFriend } from '../utils/friendService';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -267,6 +267,23 @@ const Friends: React.FC = () => {
                   <PersonName>{friend.username}</PersonName>
                   <JokeText>{friend.email}</JokeText>
                 </PersonDetails>
+                <ActionButton
+                  style={{ background: '#ff3333', color: '#fff', marginLeft: 8 }}
+                  onClick={async () => {
+                    if (!currentUser) return;
+                    setError("");
+                    try {
+                      await removeFriend(currentUser.uid, friend.uid);
+                      // Refresh the friends list
+                      const newFriends = await getFriends(currentUser.uid);
+                      setFriends(newFriends);
+                    } catch (error) {
+                      setError(error instanceof Error ? error.message : 'Failed to remove friend');
+                    }
+                  }}
+                >
+                  Remove
+                </ActionButton>
               </PersonCard>
             ))
           )}

@@ -4,8 +4,9 @@ import { Heart, Share2, Image as ImageIcon } from 'lucide-react';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
 import RetroButton from '../components/RetroButton';
-import { loadPosts, savePost, likePost } from '../utils/storage';
-import { Post } from '../types/post';
+import { useAuth } from '../contexts/AuthContext';
+import { getFriends } from '../utils/friendService';
+import { createPost, getPostsByAuthors, Post, deletePost } from '../utils/postService';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -95,19 +96,30 @@ const HiddenInput = styled.input`
 `;
 
 export default function Feed() {
+  const { currentUser } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [friends, setFriends] = useState<string[]>([]);
+  const [postText, setPostText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     loadFeedData();
     const interval = setInterval(loadFeedData, 30000);
     return () => clearInterval(interval);
-  }, []);
+    // eslint-disable-next-line
+  }, [currentUser]);
 
   const loadFeedData = async () => {
+    if (!currentUser) return;
+    setLoading(true);
     try {
-      const feedPosts = await loadPosts();
+      const friendProfiles = await getFriends(currentUser.uid);
+      const friendUids = friendProfiles.map(f => f.uid);
+      setFriends(friendUids);
+      const allowedUids = [currentUser.uid, ...friendUids];
+      const feedPosts = await getPostsByAuthors(allowedUids);
       setPosts(feedPosts);
     } catch (error) {
       console.error('Failed to load feed:', error);
@@ -124,29 +136,37 @@ export default function Feed() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = async (event) => {
-      const imageUrl = event.target?.result as string;
-      const newPost: Post = {
-        id: Date.now().toString(),
-        imageUrl,
-        authorId: 'current-user',
-        timestamp: new Date().toISOString(),
-        likes: 0,
-        likedBy: [],
-      };
-      await savePost(newPost);
-      setPosts(prev => [newPost, ...prev]);
+    reader.onload = (event) => {
+      setSelectedImage(event.target?.result as string);
     };
     reader.readAsDataURL(file);
   };
 
+  const handlePost = async () => {
+    if (!currentUser) return;
+    if (!postText && !selectedImage) return; // Prevent empty posts
+    const newPost = {
+      authorId: currentUser.uid,
+      text: postText,
+      imageUrl: selectedImage || undefined,
+      likes: 0,
+      likedBy: [],
+    };
+    await createPost(newPost);
+    setPostText('');
+    setSelectedImage(null);
+    await loadFeedData();
+  };
+
+  const handleDelete = async (postId: string) => {
+    await deletePost(postId);
+    await loadFeedData();
+  };
+
+
+  // Like functionality not implemented for Firestore version yet
   const handleLike = async (postId: string) => {
-    try {
-      const updatedPosts = await likePost(postId);
-      setPosts(updatedPosts);
-    } catch (error) {
-      alert('Failed to like post');
-    }
+    alert('Like feature coming soon!');
   };
 
   return (
@@ -154,40 +174,62 @@ export default function Feed() {
       <Header title="WITWAR" subtitle="MEME BATTLEGROUND" />
       <RetroWindow title="FEED.EXE">
         <Content>
-          <RetroButton
-            title="POST MEME"
-            onClick={handlePickImage}
-            style={{ marginBottom: 16 }}
-          />
-          <HiddenInput
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            <textarea
+              value={postText}
+              onChange={e => setPostText(e.target.value)}
+              placeholder="Write something witty..."
+              style={{ width: '100%', minHeight: 60, fontFamily: 'VT323, monospace', fontSize: 18, padding: 8, borderRadius: 6 }}
+            />
+            {selectedImage && (
+              <div style={{ marginBottom: 8 }}>
+                <img src={selectedImage} alt="Selected" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 6 }} />
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <RetroButton title="Add Image" onClick={handlePickImage} />
+              <RetroButton title="Post" onClick={handlePost} />
+            </div>
+            <HiddenInput
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+          </div>
           {loading ? (
             <Loading>LOADING...</Loading>
           ) : posts.length === 0 ? (
             <Empty>
-              <EmptyText>No memes yet!</EmptyText>
+              <EmptyText>No posts yet!</EmptyText>
               <InstructionText>Be the first to post!</InstructionText>
             </Empty>
           ) : (
             posts.map((item) => (
               <PostCard key={item.id}>
-                <PostImage src={item.imageUrl} alt="Meme" />
+                {item.text && (
+                  <div style={{ padding: 12, fontFamily: 'VT323, monospace', fontSize: 20, color: '#fff' }}>{item.text}</div>
+                )}
+                {item.imageUrl && item.imageUrl !== '' && (
+                  <PostImage src={item.imageUrl} alt="Post" />
+                )}
                 <PostActions>
-                  <ActionButton onClick={() => handleLike(item.id)}>
+                  <ActionButton onClick={() => handleLike(item.id!)}>
                     <Heart
                       size={24}
-                      color={item.likedBy.includes('current-user') ? '#ff6b6b' : '#ffffff'}
-                      fill={item.likedBy.includes('current-user') ? '#ff6b6b' : 'none'}
+                      color={'#ffffff'}
+                      fill={'none'}
                     />
                     <ActionText>{item.likes}</ActionText>
                   </ActionButton>
                   <ActionButton>
                     <Share2 size={24} color="#ffffff" />
                   </ActionButton>
+                  {currentUser && item.authorId === currentUser.uid && (
+                    <ActionButton onClick={() => handleDelete(item.id!)}>
+                      <span style={{ color: '#ff4d4d' }}>Delete</span>
+                    </ActionButton>
+                  )}
                 </PostActions>
               </PostCard>
             ))

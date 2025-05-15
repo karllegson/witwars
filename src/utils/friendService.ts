@@ -6,11 +6,11 @@ import {
   getDocs, 
   query, 
   where, 
-  setDoc, 
   updateDoc, 
-  arrayUnion, 
-  arrayRemove 
+  arrayUnion,
 } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { auth } from "../firebase";
 
 export interface UserProfile {
   uid: string;
@@ -24,13 +24,10 @@ export interface UserProfile {
 // Find a user by their username
 export const findUserByUsername = async (username: string): Promise<UserProfile | null> => {
   const usersRef = collection(db, 'users');
-  const q = query(usersRef, where('username', '==', username));
+  const normalized = username.trim().toLowerCase();
+  const q = query(usersRef, where('username', '==', normalized));
   const querySnapshot = await getDocs(q);
-  
-  if (querySnapshot.empty) {
-    return null;
-  }
-  
+  if (querySnapshot.empty) return null;
   const userDoc = querySnapshot.docs[0];
   return {
     uid: userDoc.id,
@@ -40,73 +37,84 @@ export const findUserByUsername = async (username: string): Promise<UserProfile 
 
 // Send a friend request
 export const sendFriendRequest = async (fromUserId: string, toUsername: string): Promise<void> => {
-  const toUser = await findUserByUsername(toUsername);
-  if (!toUser) {
-    throw new Error('User not found');
-  }
-  
-  if (toUser.uid === fromUserId) {
-    throw new Error('You cannot send a friend request to yourself');
-  }
+  const normalizedUsername = toUsername.trim().toLowerCase();
+  const toUser = await findUserByUsername(normalizedUsername);
+  if (!toUser) throw new Error('User not found');
+  if (toUser.uid === fromUserId) throw new Error('You cannot send a friend request to yourself');
 
-  const toUserRef = doc(db, 'users', toUser.uid);
-  await updateDoc(toUserRef, {
+  // Get both user docs
+  const [fromUserDocSnap, toUserDocSnap] = await Promise.all([
+    getDoc(doc(db, 'users', fromUserId)),
+    getDoc(doc(db, 'users', toUser.uid)),
+  ]);
+  if (!fromUserDocSnap.exists() || !toUserDocSnap.exists()) throw new Error('User document missing');
+  const fromUser = fromUserDocSnap.data() as UserProfile;
+  const toUserData = toUserDocSnap.data() as UserProfile;
+
+  // Already friends?
+  if ((fromUser.friends || []).includes(toUser.uid)) throw new Error('You are already friends with this user');
+  // Already requested?
+  if ((toUserData.friendRequests || []).includes(fromUserId)) throw new Error('Friend request already sent');
+  // Already received a request from them?
+  if ((fromUser.friendRequests || []).includes(toUser.uid)) throw new Error('This user has already sent you a friend request; check your requests!');
+
+  // All clear, send request
+  await updateDoc(doc(db, 'users', toUser.uid), {
     friendRequests: arrayUnion(fromUserId)
   });
 };
 
+// Remove a friend using the Cloud Function for two-sided removal
+export const removeFriendTwoSided = async (friendUid: string): Promise<void> => {
+  const functions = getFunctions();
+  const removeFriend = httpsCallable(functions, "removeFriend");
+  const currentUser = auth.currentUser;
+  if (!currentUser) throw new Error("Not authenticated");
+  await removeFriend({ userA: currentUser.uid, userB: friendUid });
+};
+
 // Accept a friend request
 export const acceptFriendRequest = async (currentUserId: string, fromUserId: string): Promise<void> => {
-  // Get both user references
   const currentUserRef = doc(db, 'users', currentUserId);
   const fromUserRef = doc(db, 'users', fromUserId);
-  
-  // Get current user's document
   const currentUserDoc = await getDoc(currentUserRef);
-  if (!currentUserDoc.exists()) {
-    throw new Error('Current user not found');
-  }
-  
-  // Get the requesting user's document
-  const fromUserDoc = await getDoc(fromUserRef);
-  if (!fromUserDoc.exists()) {
-    throw new Error('Requesting user not found');
-  }
+  if (!currentUserDoc.exists()) throw new Error('User not found');
+  const currentUserData = currentUserDoc.data() as UserProfile;
+  await updateDoc(currentUserRef, {
+    friendRequests: (currentUserData.friendRequests || []).filter((id: string) => id !== fromUserId),
+    friends: arrayUnion(fromUserId),
+  });
+  await updateDoc(fromUserRef, {
+    friends: arrayUnion(currentUserId),
+  });
+};
 
-  // Update both users' documents
-  await Promise.all([
-    // Update current user's document
-    updateDoc(currentUserRef, {
-      friends: arrayUnion(fromUserId),
-      friendRequests: arrayRemove(fromUserId)
-    }),
-    // Update the other user's document
-    updateDoc(fromUserRef, {
-      friends: arrayUnion(currentUserId)
-    })
-  ]);
+// Decline a friend request
+export const declineFriendRequest = async (currentUserId: string, fromUserId: string): Promise<void> => {
+  const currentUserRef = doc(db, 'users', currentUserId);
+  const currentUserDoc = await getDoc(currentUserRef);
+  if (!currentUserDoc.exists()) throw new Error('User not found');
+  const currentUserData = currentUserDoc.data() as UserProfile;
+  await updateDoc(currentUserRef, {
+    friendRequests: (currentUserData.friendRequests || []).filter((id: string) => id !== fromUserId),
+  });
 };
 
 // Get all friend requests for a user
 export const getFriendRequests = async (userId: string): Promise<UserProfile[]> => {
   const userRef = doc(db, 'users', userId);
   const userDoc = await getDoc(userRef);
-  
   if (!userDoc.exists()) {
     throw new Error('User not found');
   }
-  
   const userData = userDoc.data() as UserProfile;
   const friendRequests = userData.friendRequests || [];
-  
   if (friendRequests.length === 0) {
     return [];
   }
-
   // Batch get all friend request users
   const q = query(collection(db, 'users'), where('__name__', 'in', friendRequests));
   const querySnapshot = await getDocs(q);
-  
   return querySnapshot.docs.map(doc => ({
     uid: doc.id,
     ...doc.data()
@@ -137,4 +145,11 @@ export const getFriends = async (userId: string): Promise<UserProfile[]> => {
     uid: doc.id,
     ...doc.data()
   })) as UserProfile[];
+};
+
+// Wrapper function that matches the parameter signature used in Friends.tsx
+export const removeFriend = async (currentUserId: string, friendUid: string): Promise<void> => {
+  // We only need the friendUid for the Cloud Function call
+  // currentUserId is verified inside the removeFriendTwoSided function
+  return removeFriendTwoSided(friendUid);
 };
