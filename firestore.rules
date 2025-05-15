@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow authenticated users to read any user profile, but only write their own
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      
+      // Allow users to write to their own document
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow users to update other users' friendRequests array (for sending friend requests)
+      allow update: if request.auth != null && 
+                    (
+                      // Either updating your own document
+                      request.auth.uid == userId ||
+                      
+                      // OR adding yourself to someone's friend requests
+                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friendRequests']) &&
+                       request.resource.data.friendRequests.hasAll(resource.data.friendRequests || []))
+                    );
+    }
+
+    // Allow authenticated users to read all posts and create new posts
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      // Allow update and delete only if the user is the post author
+      allow update, delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+    }
+  }
+}

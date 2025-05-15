@@ -169,7 +169,40 @@ Cloud Functions provide backend logic for operations that require server-side ex
 - **Implementation**:
   - Removes userB from userA's friends array
   - Removes userA from userB's friends array
-- **Security**: Verifies that the caller is userA
+  - Uses a Firestore transaction for atomicity
+  - Includes error handling and logging
+- **Security**: 
+  - Verifies that the caller is userA
+  - Configured with CORS headers to allow cross-origin requests from the app domain
+
+## Firestore Security Rules
+
+The application uses Firestore Security Rules to control access to the database.
+
+### User Documents
+- **Read Access**: Any authenticated user can read any user profile
+- **Write Access**:
+  - Users can only write to their own documents (`request.auth.uid == userId`)
+  - Special rule for friend requests: Users can update another user's `friendRequests` array to add themselves
+
+### Post Documents
+- **Read Access**: Any authenticated user can read all posts
+- **Create Access**: Any authenticated user can create posts
+- **Update/Delete Access**: Only the post author can update or delete their own posts
+
+### Friend Request Rule
+The special rule for friend requests allows users to send friend requests while maintaining security:
+```
+allow update: if request.auth != null 
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friendRequests'])
+              && request.resource.data.friendRequests.hasAll(resource.data.friendRequests || [])
+              && request.resource.data.friendRequests.size() <= (resource.data.friendRequests || []).size() + 1;
+```
+
+This ensures:
+- Only the `friendRequests` field can be modified
+- All existing friend requests are preserved
+- At most one new request can be added at a time
 
 ## Data Models
 
@@ -207,6 +240,34 @@ Manages friend-related operations (detailed in the Friend System section).
 Manages post-related operations (detailed in the Post System section).
 
 ---
+
+## CORS Configuration
+
+The application includes Cross-Origin Resource Sharing (CORS) configuration to allow the frontend to communicate with the backend services.
+
+### Firebase Hosting CORS Headers
+- Added in `firebase.json` to allow cross-origin requests to Cloud Functions
+- Configuration:
+  ```json
+  "hosting": {
+    "headers": [
+      {
+        "source": "/**",
+        "headers": [
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      }
+    ]
+  }
+  ```
+- This allows the frontend at `witwars.com` to call Cloud Functions at `us-central1-witwars-79a2b.cloudfunctions.net`
+
+### Cloud Functions
+- Cloud Functions like `removeFriend` are configured to handle cross-origin requests
+- The implementation uses Firebase Callable Functions which handle CORS automatically when properly configured
 
 ## Future Feature Considerations
 
