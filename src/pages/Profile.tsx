@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
 import RetroButton from '../components/RetroButton';
@@ -14,57 +15,9 @@ const Container = styled.div`
   padding-bottom: 80px;
 `;
 
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-`;
-
-const LoadingText = styled.div`
-  font-family: 'VT323', monospace;
-  font-size: 24px;
-  color: #33ff33;
-`;
-
 const Content = styled.div`
   padding: 16px;
   color: #fff;
-`;
-
-const FormSection = styled.div`
-  margin-bottom: 20px;
-`;
-
-const Label = styled.div`
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
-  color: #ffcc00;
-  margin-bottom: 8px;
-`;
-
-const Input = styled.input`
-  background: #2a2a40;
-  border: 2px solid #444466;
-  padding: 12px;
-  font-family: 'VT323', monospace;
-  font-size: 18px;
-  color: #fff;
-  border-radius: 4px;
-  width: 100%;
-`;
-
-const TextArea = styled.textarea`
-  background: #2a2a40;
-  border: 2px solid #444466;
-  padding: 12px;
-  font-family: 'VT323', monospace;
-  font-size: 18px;
-  color: #fff;
-  border-radius: 4px;
-  width: 100%;
-  height: 100px;
-  resize: none;
 `;
 
 const StatsSection = styled.div`
@@ -121,16 +74,36 @@ const AuthButtonContainer = styled.div`
   gap: 20px;
 `;
 
-const UserInfo = styled.div`
-  font-family: 'VT323', monospace;
-  font-size: 18px;
-  color: #ccc;
-  margin-bottom: 20px;
+
+
+const UsernameDisplay = styled.div`
+  font-family: 'Press Start 2P', cursive;
+  font-size: 24px;
+  color: #33ff33;
+  text-align: center;
+  margin: 20px 0;
+  padding: 16px;
+  background: #2a2a40;
+  border: 2px solid #444466;
+  border-radius: 4px;
 `;
 
 const ProfilePage: React.FC = () => {
   const { currentUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [username, setUsername] = useState<string>('');
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (currentUser) {
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        if (userDoc.exists()) {
+          setUsername(userDoc.data().username);
+        }
+      }
+    };
+    fetchUserData();
+  }, [currentUser]);
 
   const handleLogout = async () => {
     try {
@@ -174,12 +147,35 @@ const ProfilePage: React.FC = () => {
 
   return (
     <Container>
-      <Header title="COMEDY KINGS" subtitle={`WELCOME, ${currentUser.displayName || currentUser.email}!`}/>
-      <RetroWindow title={`${currentUser.email}.USR`}>
+      <Header title="COMEDY KINGS" subtitle={`WELCOME, ${username || currentUser.email}!`}/>
+      <RetroWindow title={`PROFILE.EXE`}>
         <Content>
-          <UserInfo>Email: {currentUser.email}</UserInfo>
-          <UserInfo>UID: {currentUser.uid}</UserInfo>
-          <p>Profile editing and stats from Firestore coming soon!</p>
+          <UsernameDisplay>@{username}</UsernameDisplay>
+          
+          <StatsSection>
+            <StatsTitle>ACCOUNT INFO</StatsTitle>
+            <StatsRow>
+              <StatsLabel>Username:</StatsLabel>
+              <StatsValue>@{username}</StatsValue>
+            </StatsRow>
+            <StatsRow>
+              <StatsLabel>Email:</StatsLabel>
+              <StatsValue>{currentUser?.email}</StatsValue>
+            </StatsRow>
+            <StatsRow>
+              <StatsLabel>Account ID:</StatsLabel>
+              <StatsValue style={{ fontSize: '14px' }}>{currentUser.uid}</StatsValue>
+            </StatsRow>
+          </StatsSection>
+
+          <StatsSection>
+            <StatsTitle>STATS</StatsTitle>
+            <StatsRow>
+              <StatsLabel>Member Since:</StatsLabel>
+              <StatsValue>{new Date(currentUser.metadata.creationTime || '').toLocaleDateString()}</StatsValue>
+            </StatsRow>
+          </StatsSection>
+
           <RetroButton title="LOGOUT" onClick={handleLogout} style={{ marginTop: 20 }}/>
         </Content>
       </RetroWindow>

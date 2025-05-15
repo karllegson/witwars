@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
-import { loadLeaderboard, getFriends, getFriendRequests, sendFriendRequest, acceptFriendRequest, loadProfile } from '../utils/storage';
-import { Person } from '../types/person';
+import { useAuth } from '../contexts/AuthContext';
+import { UserProfile, getFriends, getFriendRequests, sendFriendRequest, acceptFriendRequest } from '../utils/friendService';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -86,36 +86,7 @@ const JokeText = styled.div`
   font-style: italic;
 `;
 
-const NoJokeText = styled.div`
-  font-family: 'VT323', monospace;
-  font-size: 16px;
-  color: #888;
-  font-style: italic;
-`;
 
-const ScoreContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #1a1a2e;
-  border-radius: 4px;
-  padding: 8px;
-  min-width: 70px;
-`;
-
-const ScoreValue = styled.div`
-  font-family: 'Press Start 2P', cursive;
-  font-size: 16px;
-  color: #ffcc00;
-`;
-
-const ScoreLabel = styled.div`
-  font-family: 'VT323', monospace;
-  font-size: 14px;
-  color: #aaa;
-  margin-top: 4px;
-`;
 
 const SectionTitle = styled.h2`
   font-family: 'VT323', monospace;
@@ -124,152 +95,185 @@ const SectionTitle = styled.h2`
   margin-bottom: 16px;
 `;
 
-export default function Friends() {
-  const [friends, setFriends] = useState<Person[]>([]);
-  const [requests, setRequests] = useState<Person[]>([]);
-  const [allPeople, setAllPeople] = useState<Person[]>([]);
-  const [profile, setProfile] = useState<Person | null>(null);
+const AddFriendInput = styled.input`
+  background: #2a2a40;
+  border: 2px solid #444466;
+  padding: 12px;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: #fff;
+  border-radius: 4px;
+  width: 100%;
+  margin-bottom: 16px;
+`;
+
+const ActionButton = styled.button`
+  background: #4a4a6a;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #5a5a7a;
+  }
+
+  &:disabled {
+    background: #3a3a4a;
+    cursor: not-allowed;
+  }
+`;
+
+const ErrorText = styled.div`
+  color: #ff4444;
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  margin-top: 8px;
+`;
+
+const Friends: React.FC = () => {
+  const { currentUser } = useAuth();
+  const [friends, setFriends] = useState<UserProfile[]>([]);
+  const [requests, setRequests] = useState<UserProfile[]>([]);
+  const [newFriendUsername, setNewFriendUsername] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!currentUser) {
+        navigate('/');
+        return;
+      }
+
       setLoading(true);
       try {
-        const [f, r, all, p] = await Promise.all([
-          getFriends(),
-          getFriendRequests(),
-          loadLeaderboard(),
-          loadProfile(),
+        const [f, r] = await Promise.all([
+          getFriends(currentUser.uid),
+          getFriendRequests(currentUser.uid)
         ]);
         setFriends(f);
         setRequests(r);
-        setAllPeople(all);
-        setProfile(p);
       } catch (error) {
         console.error('Failed to load friends:', error);
+        setError('Failed to load friends');
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-    const interval = setInterval(fetchData, 60000);
-    return () => clearInterval(interval);
-  }, []);
+  }, [currentUser, navigate]);
 
-  const handleSendRequest = async (id: string) => {
+  const handleAddFriend = async () => {
+    if (!currentUser) return;
+    setError('');
     try {
-      await sendFriendRequest(id);
-      alert('Friend request sent!');
-    } catch (e) {
-      alert('Failed to send friend request');
+      await sendFriendRequest(currentUser.uid, newFriendUsername);
+      setNewFriendUsername('');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to send friend request');
     }
   };
 
-  const handleAcceptRequest = async (id: string) => {
+  const handleAcceptRequest = async (fromUserId: string) => {
+    if (!currentUser) return;
+    setError('');
     try {
-      await acceptFriendRequest(id);
-      alert('Friend request accepted!');
-    } catch (e) {
-      alert('Failed to accept friend request');
+      await acceptFriendRequest(currentUser.uid, fromUserId);
+      // Refresh the lists
+      const [newFriends, newRequests] = await Promise.all([
+        getFriends(currentUser.uid),
+        getFriendRequests(currentUser.uid)
+      ]);
+      setFriends(newFriends);
+      setRequests(newRequests);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to accept friend request');
     }
   };
 
-  const navigateToProfile = (id: string) => {
-    navigate(`/person/${id}`);
-  };
+  if (!currentUser) {
+    navigate('/');
+    return null;
+  }
 
-  // Users you can send requests to (not yourself, not already friends, not already sent, not already received)
-  const canRequest = (person: Person) => {
-    if (!profile) return false;
-    if (person.id === profile.id) return false;
-    if (profile.friends?.includes(person.id)) return false;
-    if (profile.friendRequestsSent?.includes(person.id)) return false;
-    if (profile.friendRequestsReceived?.includes(person.id)) return false;
-    return true;
-  };
+  if (loading) {
+    return (
+      <Container>
+        <Header title="COMEDY KINGS" subtitle="FRIENDS" />
+        <RetroWindow title="FRIENDS.EXE">
+          <LoadingContainer>
+            <LoadingText>Loading...</LoadingText>
+          </LoadingContainer>
+        </RetroWindow>
+      </Container>
+    );
+  }
 
   return (
     <Container>
-      <Header title="COMEDY KINGS" subtitle="YOUR HILARIOUS FRIENDS" />
+      <Header title="COMEDY KINGS" subtitle="FRIENDS" />
       <RetroWindow title="FRIENDS.EXE">
-        {loading ? (
-          <LoadingContainer>
-            <LoadingText>LOADING...</LoadingText>
-          </LoadingContainer>
-        ) : (
-          <ListContent>
-            {/* Friend Requests */}
-            {requests.length > 0 && (
-              <>
-                <SectionTitle>Friend Requests</SectionTitle>
-                {requests.map((item) => (
-                  <PersonCard key={item.id}>
-                    <PersonDetails>
-                      <PersonName>{item.name}</PersonName>
-                      {item.joke ? (
-                        <JokeText>"{item.joke}"</JokeText>
-                      ) : (
-                        <NoJokeText>No joke yet</NoJokeText>
-                      )}
-                    </PersonDetails>
-                    <ScoreContainer>
-                      <ScoreValue>{item.votes}</ScoreValue>
-                      <ScoreLabel>VOTES</ScoreLabel>
-                      <button onClick={() => handleAcceptRequest(item.id)} style={{marginTop:8}}>Accept</button>
-                    </ScoreContainer>
-                  </PersonCard>
-                ))}
-              </>
-            )}
-            {/* Friends List */}
-            <SectionTitle>Friends</SectionTitle>
-            {friends.length === 0 ? (
-              <EmptyText>No friends added yet!</EmptyText>
-            ) : (
-              friends.map((item) => (
-                <PersonCard key={item.id} onClick={() => navigateToProfile(item.id)}>
-                  <PersonDetails>
-                    <PersonName>{item.name}</PersonName>
-                    {item.joke ? (
-                      <JokeText>"{item.joke}"</JokeText>
-                    ) : (
-                      <NoJokeText>No joke yet</NoJokeText>
-                    )}
-                  </PersonDetails>
-                  <ScoreContainer>
-                    <ScoreValue>{item.votes}</ScoreValue>
-                    <ScoreLabel>VOTES</ScoreLabel>
-                  </ScoreContainer>
-                </PersonCard>
-              ))
-            )}
-            {/* Add Friends */}
-            <SectionTitle>Add Friends</SectionTitle>
-            {allPeople.filter(canRequest).length === 0 ? (
-              <EmptyText>No one to add as a friend!</EmptyText>
-            ) : (
-              allPeople.filter(canRequest).map((item) => (
-                <PersonCard key={item.id}>
-                  <PersonDetails>
-                    <PersonName>{item.name}</PersonName>
-                    {item.joke ? (
-                      <JokeText>"{item.joke}"</JokeText>
-                    ) : (
-                      <NoJokeText>No joke yet</NoJokeText>
-                    )}
-                  </PersonDetails>
-                  <ScoreContainer>
-                    <ScoreValue>{item.votes}</ScoreValue>
-                    <ScoreLabel>VOTES</ScoreLabel>
-                    <button onClick={() => handleSendRequest(item.id)} style={{marginTop:8}}>Add Friend</button>
-                  </ScoreContainer>
-                </PersonCard>
-              ))
-            )}
-          </ListContent>
-        )}
+        <ListContent>
+          <SectionTitle>ADD FRIEND</SectionTitle>
+          <AddFriendInput
+            type="text"
+            placeholder="Enter username to add friend"
+            value={newFriendUsername}
+            onChange={(e) => setNewFriendUsername(e.target.value)}
+          />
+          <ActionButton
+            onClick={handleAddFriend}
+            disabled={!newFriendUsername.trim()}
+          >
+            Send Friend Request
+          </ActionButton>
+          {error && <ErrorText>{error}</ErrorText>}
+
+          <SectionTitle style={{ marginTop: '32px' }}>FRIEND REQUESTS</SectionTitle>
+          {requests.length === 0 ? (
+            <EmptyContainer>
+              <EmptyText>No pending friend requests</EmptyText>
+            </EmptyContainer>
+          ) : (
+            requests.map((request) => (
+              <PersonCard key={request.uid}>
+                <PersonDetails>
+                  <PersonName>{request.username}</PersonName>
+                  <JokeText>{request.email}</JokeText>
+                </PersonDetails>
+                <ActionButton onClick={() => handleAcceptRequest(request.uid)}>
+                  Accept
+                </ActionButton>
+              </PersonCard>
+            ))
+          )}
+
+          <SectionTitle style={{ marginTop: '32px' }}>YOUR FRIENDS</SectionTitle>
+          {friends.length === 0 ? (
+            <EmptyContainer>
+              <EmptyText>No friends yet</EmptyText>
+              <InstructionText>Add friends using their username above!</InstructionText>
+            </EmptyContainer>
+          ) : (
+            friends.map((friend) => (
+              <PersonCard key={friend.uid}>
+                <PersonDetails>
+                  <PersonName>{friend.username}</PersonName>
+                  <JokeText>{friend.email}</JokeText>
+                </PersonDetails>
+              </PersonCard>
+            ))
+          )}
+        </ListContent>
       </RetroWindow>
     </Container>
   );
-} 
+};
+
+export default Friends;

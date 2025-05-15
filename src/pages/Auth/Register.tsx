@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
 import styled from 'styled-components';
 
 // Re-using some styled components from Login.tsx for consistency
@@ -72,6 +73,7 @@ const StyledLink = styled(Link)`
 `;
 
 const Register: React.FC = () => {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -82,15 +84,32 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!username.trim()) {
+      setError("Username is required.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // Optionally, create a user document in Firestore here
-      navigate('/'); // Navigate to home page or dashboard
+      // Create the user account
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Create user document with username
+      await setDoc(doc(db, 'users', user.uid), {
+        username: username,
+        email: email,
+        friends: [],
+        friendRequests: [],
+        createdAt: new Date().toISOString()
+      });
+
+      navigate('/');
     } catch (err: any) {
       setError(err.message);
       console.error("Registration error:", err);
@@ -103,6 +122,13 @@ const Register: React.FC = () => {
     <Container>
       <h2>Register</h2>
       <Form onSubmit={handleSubmit}>
+        <Input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
         <Input
           type="email"
           placeholder="Email"
