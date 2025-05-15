@@ -3,25 +3,21 @@ import styled from 'styled-components';
 import { Heart, Share2, Image as ImageIcon } from 'lucide-react';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
+import AppContainer from '../components/AppContainer';
 import RetroButton from '../components/RetroButton';
 import { useAuth } from '../contexts/AuthContext';
 import { getFriends } from '../utils/friendService';
 import { createPost, getPostsByAuthors, Post, deletePost } from '../utils/postService';
 
-const Container = styled.div`
-  min-height: 100vh;
-  background: #1a1a2e;
-  padding-bottom: 80px;
-`;
 
 const Content = styled.div`
   padding: 16px;
 `;
 
 const PostCard = styled.div`
-  background: #2a2a40;
+  background: #2a2a2a;
   border-radius: 8px;
-  border: 2px solid #444466;
+  border: 2px solid #333;
   overflow: hidden;
   margin-bottom: 16px;
 `;
@@ -170,8 +166,8 @@ export default function Feed() {
   };
 
   return (
-    <Container>
-      <Header title="WITWAR" subtitle="MEME BATTLEGROUND" />
+    <AppContainer>
+      <Header title="WITWARS" subtitle="Battleground" />
       <RetroWindow title="FEED.EXE">
         <Content>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
@@ -236,6 +232,6 @@ export default function Feed() {
           )}
         </Content>
       </RetroWindow>
-    </Container>
+    </AppContainer>
   );
 } 

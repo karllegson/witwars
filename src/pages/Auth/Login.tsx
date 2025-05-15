@@ -35,7 +35,7 @@ const Input = styled.input`
 
 const Button = styled.button`
   padding: 10px 15px;
-  background-color: #007bff;
+  background-color: #232323;
   color: white;
   border: none;
   border-radius: 4px;
@@ -44,7 +44,7 @@ const Button = styled.button`
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #0056b3;
+    background-color: #333;
   }
 
   &:disabled {

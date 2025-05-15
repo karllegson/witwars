@@ -73,11 +73,11 @@ The authentication system uses Firebase Authentication with email/password and i
 
 ## Friend System
 
-The friend system allows users to connect with each other through friend requests.
+The friend system allows users to connect with each other through friend requests. The system uses a two-step process: sending a request and accepting it.
 
 ### Data Structure
-- `users/{uid}/friends`: Array of friend UIDs
-- `users/{uid}/friendRequests`: Array of pending request UIDs
+- `users/{uid}/friends`: Array of friend UIDs (bidirectional relationship)
+- `users/{uid}/friendRequests`: Array of pending request UIDs (unidirectional)
 
 ### Functions
 
@@ -97,8 +97,59 @@ The friend system allows users to connect with each other through friend request
   - Prevents sending requests to oneself
   - Prevents duplicate requests
   - Checks if users are already friends
+  - Checks if there's an existing request in either direction
 
 #### `acceptFriendRequest`
+- **Purpose**: Accept a friend request and establish a mutual friendship
+- **Parameters**: `currentUserId: string, fromUserId: string`
+- **Returns**: `Promise<void>`
+- **Implementation**: 
+  - Removes the request from `friendRequests`
+  - Adds both users to each other's `friends` array
+  - Performs both updates in a single transaction
+
+#### `removeFriend`
+- **Purpose**: Remove a friend from both users' friends lists
+- **Parameters**: `currentUserId: string, friendUid: string`
+- **Returns**: `Promise<void>`
+- **Implementation**: 
+  - Removes both users from each other's `friends` array
+  - Performs both updates in a single transaction
+
+### Firestore Security Rules
+The current security rules are designed to be permissive to ensure the friend system works while maintaining basic security:
+
+```firestore
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null;
+    }
+    // Post-related rules...
+  }
+}
+```
+
+### Implementation Notes
+- All friend operations require user authentication
+- Friend relationships are bidirectional (both users must agree)
+- Friend requests are unidirectional (only the recipient can accept)
+- The system prevents duplicate requests and self-friending
+- All operations are atomic to prevent race conditions
+
+### Error Handling
+- All operations include proper error handling
+- Errors are logged and displayed to the user
+- Network errors are caught and handled gracefully
+
+### Future Improvements
+- Add friend request notifications
+- Implement friend suggestion system
+- Add blocking functionality
+- Add friend groups/categories
 - **Purpose**: Accept a friend request
 - **Parameters**: `currentUserId: string, fromUserId: string`
 - **Returns**: `Promise<void>`

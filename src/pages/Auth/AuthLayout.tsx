@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
+import AppContainer from '../../components/AppContainer';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { onAuthStateChanged, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -53,7 +55,7 @@ const AuthLayout: React.FC = () => {
   };
 
   return (
-    <div>
+    <AppContainer>
       <h2>Register</h2>
       <input
         type="text"

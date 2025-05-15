@@ -2,15 +2,11 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
+import AppContainer from '../components/AppContainer';
 import RetroButton from '../components/RetroButton';
 import { loadLeaderboard, saveLeaderboard, getLastVoteTime, setLastVoteTime } from '../utils/storage';
 import { Person } from '../types/person';
 
-const Container = styled.div`
-  min-height: 100vh;
-  background: #1a1a2e;
-  padding-bottom: 80px;
-`;
 
 const Content = styled.div`
   padding: 16px;
@@ -35,8 +31,8 @@ const AddPersonInputRow = styled.div`
 const Input = styled.input`
   flex: 1;
   height: 48px;
-  background: #2a2a40;
-  border: 2px solid #444466;
+  background: #232323;
+  border: 2px solid #1a1a1a;
   padding: 0 12px;
   font-family: 'VT323', monospace;
   font-size: 20px;
@@ -75,11 +71,11 @@ const PersonVoteRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #2a2a40;
+  background: #232323;
   margin-bottom: 10px;
   padding: 12px;
   border-radius: 4px;
-  border: 1px solid #444466;
+  border: 1px solid #1a1a1a;
 `;
 
 const PersonName = styled.div`
@@ -178,7 +174,7 @@ export default function Vote() {
   };
 
   return (
-    <Container>
+    <AppContainer>
       <Header title="COMEDY KINGS" subtitle="CAST YOUR VOTE" />
       <RetroWindow title="VOTE.EXE">
         <Content>
@@ -224,6 +220,6 @@ export default function Vote() {
           </VotingSection>
         </Content>
       </RetroWindow>
-    </Container>
+    </AppContainer>
   );
 } 

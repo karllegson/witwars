@@ -26,7 +26,7 @@ const Subtitle = styled.h2`
   margin: 0;
 `;
 
-export default function Header({ title, subtitle }: HeaderProps) {
+export default function Header({ title = 'WITWARS', subtitle = 'MEME BATTLEGROUNDS' }: HeaderProps) {
   return (
     <HeaderContainer>
       <Title>{title}</Title>

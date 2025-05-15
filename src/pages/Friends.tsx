@@ -3,14 +3,10 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
+import AppContainer from '../components/AppContainer';
 import { useAuth } from '../contexts/AuthContext';
 import { UserProfile, getFriends, getFriendRequests, sendFriendRequest, acceptFriendRequest, removeFriend } from '../utils/friendService';
 
-const Container = styled.div`
-  min-height: 100vh;
-  background: #1a1a2e;
-  padding-bottom: 80px;
-`;
 
 const LoadingContainer = styled.div`
   display: flex;
@@ -35,7 +31,7 @@ const EmptyContainer = styled.div`
 
 const EmptyText = styled.div`
   font-family: 'Press Start 2P', cursive;
-  font-size: 16px;
+  font-size: 14px;
   color: #fff;
   text-align: center;
   margin-bottom: 16px;
@@ -55,15 +51,15 @@ const ListContent = styled.div`
 const PersonCard = styled.div`
   display: flex;
   justify-content: space-between;
-  background: #2a2a40;
+  background: #232323;
   margin-bottom: 16px;
   padding: 16px;
   border-radius: 4px;
-  border: 2px solid #444466;
+  border: 2px solid #333;
   cursor: pointer;
   transition: background 0.1s;
   &:hover {
-    background: #35355a;
+    background: #2a2a2a;
   }
 `;
 
@@ -96,8 +92,8 @@ const SectionTitle = styled.h2`
 `;
 
 const AddFriendInput = styled.input`
-  background: #2a2a40;
-  border: 2px solid #444466;
+  background: #232323;
+  border: 2px solid #333;
   padding: 12px;
   font-family: 'VT323', monospace;
   font-size: 18px;
@@ -108,7 +104,7 @@ const AddFriendInput = styled.input`
 `;
 
 const ActionButton = styled.button`
-  background: #4a4a6a;
+  background: #232323;
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -119,11 +115,11 @@ const ActionButton = styled.button`
   transition: background 0.2s;
 
   &:hover {
-    background: #5a5a7a;
+    background: #2a2a2a;
   }
 
   &:disabled {
-    background: #3a3a4a;
+    background: #232323;
     cursor: not-allowed;
   }
 `;
@@ -204,19 +200,19 @@ const Friends: React.FC = () => {
 
   if (loading) {
     return (
-      <Container>
+      <AppContainer>
         <Header title="COMEDY KINGS" subtitle="FRIENDS" />
         <RetroWindow title="FRIENDS.EXE">
           <LoadingContainer>
             <LoadingText>Loading...</LoadingText>
           </LoadingContainer>
         </RetroWindow>
-      </Container>
+      </AppContainer>
     );
   }
 
   return (
-    <Container>
+    <AppContainer>
       <Header title="COMEDY KINGS" subtitle="FRIENDS" />
       <RetroWindow title="FRIENDS.EXE">
         <ListContent>
@@ -235,23 +231,21 @@ const Friends: React.FC = () => {
           </ActionButton>
           {error && <ErrorText>{error}</ErrorText>}
 
-          <SectionTitle style={{ marginTop: '32px' }}>FRIEND REQUESTS</SectionTitle>
-          {requests.length === 0 ? (
-            <EmptyContainer>
-              <EmptyText>No pending friend requests</EmptyText>
-            </EmptyContainer>
-          ) : (
-            requests.map((request) => (
-              <PersonCard key={request.uid}>
-                <PersonDetails>
-                  <PersonName>{request.username}</PersonName>
-                  <JokeText>{request.email}</JokeText>
-                </PersonDetails>
-                <ActionButton onClick={() => handleAcceptRequest(request.uid)}>
-                  Accept
-                </ActionButton>
-              </PersonCard>
-            ))
+          {requests.length > 0 && (
+            <>
+              <SectionTitle style={{ marginTop: '32px' }}>FRIEND REQUESTS</SectionTitle>
+              {requests.map((request) => (
+                <PersonCard key={request.uid}>
+                  <PersonDetails>
+                    <PersonName>{request.username}</PersonName>
+                    <JokeText>{request.email}</JokeText>
+                  </PersonDetails>
+                  <ActionButton onClick={() => handleAcceptRequest(request.uid)}>
+                    Accept
+                  </ActionButton>
+                </PersonCard>
+              ))}
+            </>
           )}
 
           <SectionTitle style={{ marginTop: '32px' }}>YOUR FRIENDS</SectionTitle>
@@ -289,7 +283,7 @@ const Friends: React.FC = () => {
           )}
         </ListContent>
       </RetroWindow>
-    </Container>
+    </AppContainer>
   );
 };
 

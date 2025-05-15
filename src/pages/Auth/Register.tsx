@@ -14,7 +14,7 @@ const Container = styled.div`
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
-  background-color: #f0f2f5;
+  background-color: #1a1a1a;
 `;
 
 const Form = styled.form`
@@ -22,7 +22,7 @@ const Form = styled.form`
   flex-direction: column;
   gap: 15px;
   padding: 30px;
-  background-color: white;
+  background-color: #232323;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
@@ -38,7 +38,7 @@ const Input = styled.input`
 
 const Button = styled.button`
   padding: 10px 15px;
-  background-color: #28a745; // Green for register
+  background-color: #232323;
   color: white;
   border: none;
   border-radius: 4px;
@@ -47,7 +47,7 @@ const Button = styled.button`
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #218838;
+    background-color: #333;
   }
 
   &:disabled {

@@ -7,13 +7,9 @@ import { signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
+import AppContainer from '../components/AppContainer';
 import RetroButton from '../components/RetroButton';
 
-const Container = styled.div`
-  min-height: 100vh;
-  background: #1a1a2e;
-  padding-bottom: 80px;
-`;
 
 const Content = styled.div`
   padding: 16px;
@@ -21,8 +17,8 @@ const Content = styled.div`
 `;
 
 const StatsSection = styled.div`
-  background: #2a2a40;
-  border: 2px solid #444466;
+  background: #232323;
+  border: 2px solid #333;
   padding: 16px;
   border-radius: 4px;
   margin-bottom: 20px;
@@ -83,8 +79,8 @@ const UsernameDisplay = styled.div`
   text-align: center;
   margin: 20px 0;
   padding: 16px;
-  background: #2a2a40;
-  border: 2px solid #444466;
+  background: #232323;
+  border: 2px solid #333;
   border-radius: 4px;
 `;
 
@@ -117,20 +113,20 @@ const ProfilePage: React.FC = () => {
 
   if (authLoading) {
     return (
-      <Container>
+      <AppContainer>
         <Header title="COMEDY KINGS" subtitle="YOUR PROFILE" />
         <RetroWindow title="PROFILE.EXE">
           <Content>
             <p>Loading authentication status...</p>
           </Content>
         </RetroWindow>
-      </Container>
+      </AppContainer>
     );
   }
 
   if (!currentUser) {
     return (
-      <Container>
+      <AppContainer>
         <Header title="COMEDY KINGS" subtitle="JOIN THE STAGE" />
         <RetroWindow title="ACCESS.DENIED">
           <AuthPromptContainer>
@@ -141,12 +137,12 @@ const ProfilePage: React.FC = () => {
             </AuthButtonContainer>
           </AuthPromptContainer>
         </RetroWindow>
-      </Container>
+      </AppContainer>
     );
   }
 
   return (
-    <Container>
+    <AppContainer>
       <Header title="COMEDY KINGS" subtitle={`WELCOME, ${username || currentUser.email}!`}/>
       <RetroWindow title={`PROFILE.EXE`}>
         <Content>
@@ -179,7 +175,7 @@ const ProfilePage: React.FC = () => {
           <RetroButton title="LOGOUT" onClick={handleLogout} style={{ marginTop: 20 }}/>
         </Content>
       </RetroWindow>
-    </Container>
+    </AppContainer>
   );
 };
 

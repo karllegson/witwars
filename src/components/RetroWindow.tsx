@@ -9,19 +9,21 @@ interface RetroWindowProps {
 
 const Window = styled.div`
   margin: 0 16px 16px 16px;
-  background: #333344;
-  border: 2px solid #666677;
-  border-radius: 8px;
+  background: #232323;
+  border: 4px solid #333;
+  border-radius: 10px;
   overflow: hidden;
+  box-shadow: 0 0 24px 4px #111;
 `;
 
+// Increased border and shadow for main window above
 const TitleBar = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #222233;
+  background: #1a1a1a;
   padding: 10px 12px;
-  border-bottom: 2px solid #444455;
+  border-bottom: 2px solid #333;
 `;
 
 const TitleText = styled.span`
@@ -31,7 +33,7 @@ const TitleText = styled.span`
 `;
 
 const Content = styled.div`
-  background: #222233;
+  background: #1a1a1a;
   padding: 0;
 `;
 
