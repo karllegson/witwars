@@ -8,6 +8,7 @@ import {
   where, 
   updateDoc, 
   arrayUnion,
+  arrayRemove,
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { auth } from "../firebase";
@@ -64,13 +65,31 @@ export const sendFriendRequest = async (fromUserId: string, toUsername: string):
   });
 };
 
-// Remove a friend using the Cloud Function for two-sided removal
+// Remove a friend directly using Firestore (no Cloud Function)
 export const removeFriendTwoSided = async (friendUid: string): Promise<void> => {
-  const functions = getFunctions();
-  const removeFriend = httpsCallable(functions, "removeFriend");
   const currentUser = auth.currentUser;
   if (!currentUser) throw new Error("Not authenticated");
-  await removeFriend({ userA: currentUser.uid, userB: friendUid });
+  
+  try {
+    // Get references to both user documents
+    const currentUserRef = doc(db, 'users', currentUser.uid);
+    const friendUserRef = doc(db, 'users', friendUid);
+    
+    // Remove the friend from the current user's friends list
+    await updateDoc(currentUserRef, {
+      friends: arrayRemove(friendUid)
+    });
+    
+    // Remove the current user from the friend's friends list
+    await updateDoc(friendUserRef, {
+      friends: arrayRemove(currentUser.uid)
+    });
+    
+    console.log('Friend removed successfully');
+  } catch (error) {
+    console.error('Error removing friend:', error);
+    throw new Error("Failed to remove friend. Please try again.");
+  }
 };
 
 // Accept a friend request
