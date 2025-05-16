@@ -6,7 +6,7 @@ admin.initializeApp();
 /**
  * Cloud Function to remove a friend connection between two users
  */
-export const removeFriend = functions.https.onCall(async (data, context) => {
+export const removeFriend = functions.https.onCall(async (data: any, context: any) => {
   // Ensure the user is authenticated
   if (!context || !context.auth) {
     throw new functions.https.HttpsError(
@@ -17,9 +17,13 @@ export const removeFriend = functions.https.onCall(async (data, context) => {
 
   try {
     // Get the user IDs from the request data
-    const requestData = data as Record<string, unknown>;
-    const userA = requestData.userA as string;
-    const userB = requestData.userB as string;
+    const { userA, userB } = data;
+    if (typeof userA !== 'string' || typeof userB !== 'string') {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Missing or invalid user IDs"
+      );
+    }
     
     // Validate the data
     if (!userA || !userB || typeof userA !== 'string' || typeof userB !== 'string') {

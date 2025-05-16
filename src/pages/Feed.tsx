@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { Heart, Share2, Image as ImageIcon } from 'lucide-react';
+import { Heart, Share2 } from 'lucide-react';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
 import AppContainer from '../components/AppContainer';
@@ -95,7 +95,7 @@ export default function Feed() {
   const { currentUser } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [friends, setFriends] = useState<string[]>([]);
+  // const [friends, setFriends] = useState<string[]>([]);
   const [postText, setPostText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -113,7 +113,7 @@ export default function Feed() {
     try {
       const friendProfiles = await getFriends(currentUser.uid);
       const friendUids = friendProfiles.map(f => f.uid);
-      setFriends(friendUids);
+
       const allowedUids = [currentUser.uid, ...friendUids];
       const feedPosts = await getPostsByAuthors(allowedUids);
       setPosts(feedPosts);
@@ -161,7 +161,7 @@ export default function Feed() {
 
 
   // Like functionality not implemented for Firestore version yet
-  const handleLike = async (postId: string) => {
+  const handleLike = async () => {
     alert('Like feature coming soon!');
   };
 
@@ -210,7 +210,7 @@ export default function Feed() {
                   <PostImage src={item.imageUrl} alt="Post" />
                 )}
                 <PostActions>
-                  <ActionButton onClick={() => handleLike(item.id!)}>
+                  <ActionButton onClick={handleLike}>
                     <Heart
                       size={24}
                       color={'#ffffff'}

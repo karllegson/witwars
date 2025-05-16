@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+
 import AppContainer from '../../components/AppContainer';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { onAuthStateChanged, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth, db } from '../../firebase';
 
 const AuthLayout: React.FC = () => {
-  const [user, setUser] = useState<firebase.User | null>(null);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -16,9 +16,7 @@ const AuthLayout: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-      } else {
+      if (!user) {
         navigate('/login');
       }
     });
@@ -85,7 +83,7 @@ const AuthLayout: React.FC = () => {
       <button onClick={registerUser}>Register</button>
 
       <Outlet />
-    </div>
+    </AppContainer>
   );
 };
 

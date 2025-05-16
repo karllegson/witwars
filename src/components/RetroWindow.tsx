@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { X } from 'lucide-react';
 
 interface RetroWindowProps {
   title: string;

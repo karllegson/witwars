@@ -10,7 +10,7 @@ import {
   arrayUnion,
   arrayRemove,
 } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from "firebase/functions";
+
 import { auth } from "../firebase";
 
 export interface UserProfile {
