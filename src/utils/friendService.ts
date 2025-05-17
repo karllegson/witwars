@@ -20,7 +20,69 @@ export interface UserProfile {
   friends: string[];
   friendRequests: string[];
   createdAt: string;
+  votes?: number;
+  profilePicture?: string; // URL to profile picture
+  bio?: string;
+  location?: string; // e.g., "City, State"
+  lastUsernameChange?: number; // timestamp in ms
 }
+
+// Update username with 24h cooldown
+export const setUsernameWithCooldown = async (userId: string, newUsername: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  const userSnap = await getDoc(userRef);
+  if (!userSnap.exists()) throw new Error('User not found');
+  const user = userSnap.data() as UserProfile;
+  const now = Date.now();
+  if (user.lastUsernameChange && now - user.lastUsernameChange < 24 * 60 * 60 * 1000) {
+    throw new Error('You can only change your username once every 24 hours.');
+  }
+  await updateDoc(userRef, {
+    username: newUsername,
+    lastUsernameChange: now
+  });
+};
+
+// Update profile picture URL
+export const setProfilePicture = async (userId: string, url: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, { profilePicture: url });
+};
+
+// Update bio
+export const setBio = async (userId: string, bio: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, { bio });
+};
+
+// Update location
+export const setLocation = async (userId: string, location: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, { location });
+};
+
+// Get all users sorted by votes descending
+export const getAllUsersByVotes = async (): Promise<UserProfile[]> => {
+  const usersRef = collection(db, 'users');
+  // Firestore does not support ordering by a possibly missing field, so we default to 0
+  const q = query(usersRef);
+  const querySnapshot = await getDocs(q);
+  const users = querySnapshot.docs.map(doc => ({
+    uid: doc.id,
+    ...doc.data()
+  })) as UserProfile[];
+  // Sort by votes descending, defaulting to 0
+  users.sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0));
+  return users;
+};
+
+// Increment the votes field for a user
+export const incrementVotes = async (userId: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, {
+    votes: (await getDoc(userRef)).data()?.votes ? (await getDoc(userRef)).data()?.votes + 1 : 1
+  });
+};
 
 // Find a user by their username
 export const findUserByUsername = async (username: string): Promise<UserProfile | null> => {

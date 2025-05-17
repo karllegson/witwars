@@ -4,16 +4,13 @@ import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
 import AppContainer from '../components/AppContainer';
 import RetroButton from '../components/RetroButton';
-import { loadLeaderboard, saveLeaderboard, getLastVoteTime, setLastVoteTime } from '../utils/storage';
-import { Person } from '../types/person';
+import { getLastVoteTime, setLastVoteTime } from '../utils/storage';
+import { UserProfile, getFriends, incrementVotes } from '../utils/friendService';
+import { useAuth } from '../contexts/AuthContext';
 
 
 const Content = styled.div`
   padding: 16px;
-`;
-
-const AddPersonContainer = styled.div`
-  margin-bottom: 24px;
 `;
 
 const SectionTitle = styled.div`
@@ -21,23 +18,6 @@ const SectionTitle = styled.div`
   font-size: 14px;
   color: #ffcc00;
   margin-bottom: 12px;
-`;
-
-const AddPersonInputRow = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-const Input = styled.input`
-  flex: 1;
-  height: 48px;
-  background: #232323;
-  border: 2px solid #1a1a1a;
-  padding: 0 12px;
-  font-family: 'VT323', monospace;
-  font-size: 20px;
-  color: #fff;
-  margin-right: 8px;
 `;
 
 const VotingSection = styled.div`
@@ -85,16 +65,19 @@ const PersonName = styled.div`
 `;
 
 export default function Vote() {
-  const [people, setPeople] = useState<Person[]>([]);
-  const [newPersonName, setNewPersonName] = useState('');
+  const { currentUser } = useAuth();
+  const [friends, setFriends] = useState<UserProfile[]>([]);
   const [canVote, setCanVote] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const leaderboard = await loadLeaderboard();
-        setPeople(leaderboard);
+        if (!currentUser) return;
+        // Fetch friends from Firestore
+        const friendsList = await getFriends(currentUser.uid);
+        console.log('Loaded Firestore friends for voting:', friendsList);
+        setFriends(friendsList);
         const lastVoteTime = await getLastVoteTime();
         if (lastVoteTime) {
           const now = new Date().getTime();
@@ -120,53 +103,24 @@ export default function Vote() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleAddPerson = async () => {
-    if (!newPersonName.trim()) {
-      alert('Please enter a name');
-      return;
-    }
-    try {
-      const existingIndex = people.findIndex(
-        person => person.name.toLowerCase() === newPersonName.toLowerCase()
-      );
-      if (existingIndex >= 0) {
-        alert('This person already exists in the list');
-        return;
-      }
-      const newPerson: Person = {
-        id: Date.now().toString(),
-        name: newPersonName.trim(),
-        votes: 0,
-        bio: '',
-        joke: '',
-      };
-      const updatedPeople = [...people, newPerson];
-      await saveLeaderboard(updatedPeople);
-      setPeople(updatedPeople);
-      setNewPersonName('');
-    } catch (error) {
-      console.error('Failed to add person:', error);
-      alert('Failed to add person');
-    }
-  };
+  // Removed handleAddPerson, as adding new people is not allowed.
 
-  const handleVote = async (personId: string) => {
+  const handleVote = async (friendId: string) => {
     if (!canVote) {
       alert(`You can vote again in ${timeRemaining}`);
       return;
     }
     try {
-      const updatedPeople = people.map(person =>
-        person.id === personId
-          ? { ...person, votes: person.votes + 1 }
-          : person
-      );
-      await saveLeaderboard(updatedPeople);
-      setPeople(updatedPeople);
+      await incrementVotes(friendId);
       await setLastVoteTime(new Date().getTime());
       setCanVote(false);
       setTimeRemaining('23h 59m');
       alert('Your vote has been counted! You can vote again tomorrow.');
+      // Optionally, refresh friends list to show updated vote count
+      if (currentUser) {
+        const friendsList = await getFriends(currentUser.uid);
+        setFriends(friendsList);
+      }
     } catch (error) {
       console.error('Failed to record vote:', error);
       alert('Failed to record your vote');
@@ -178,21 +132,7 @@ export default function Vote() {
       <Header title="COMEDY KINGS" subtitle="CAST YOUR VOTE" />
       <RetroWindow title="VOTE.EXE">
         <Content>
-          <AddPersonContainer>
-            <SectionTitle>Add Someone New:</SectionTitle>
-            <AddPersonInputRow>
-              <Input
-                value={newPersonName}
-                onChange={e => setNewPersonName(e.target.value)}
-                placeholder="Person's name"
-              />
-              <RetroButton
-                title="ADD"
-                onClick={handleAddPerson}
-                style={{ width: 80, height: 48 }}
-              />
-            </AddPersonInputRow>
-          </AddPersonContainer>
+
           <VotingSection>
             <SectionTitle>Vote For Someone:</SectionTitle>
             {!canVote && (
@@ -202,15 +142,15 @@ export default function Vote() {
                 </TimeRemainingText>
               </TimeRemainingContainer>
             )}
-            {people.length === 0 ? (
-              <EmptyText>No one to vote for yet! Add someone first.</EmptyText>
+            {friends.length === 0 ? (
+              <EmptyText>No friends to vote for yet!</EmptyText>
             ) : (
-              people.map(person => (
-                <PersonVoteRow key={person.id}>
-                  <PersonName>{person.name}</PersonName>
+              friends.map(friend => (
+                <PersonVoteRow key={friend.uid}>
+                  <PersonName>{friend.username} <span style={{ color: '#ffcc00', marginLeft: 12 }}>({friend.votes ?? 0} votes)</span></PersonName>
                   <RetroButton
                     title="VOTE"
-                    onClick={() => handleVote(person.id)}
+                    onClick={() => handleVote(friend.uid)}
                     disabled={!canVote}
                     style={canVote ? { width: 80, height: 48 } : { width: 80, height: 48, opacity: 0.7 }}
                   />
