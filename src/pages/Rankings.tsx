@@ -31,7 +31,9 @@ const Subtitle = styled.div`
 
 const RankingList = styled.div`
   max-width: 500px;
+  width: 100%;
   margin: 0 auto;
+  overflow: hidden;
 `;
 
 const RankRow = styled.div<{ highlight?: boolean }>`
@@ -46,6 +48,8 @@ const RankRow = styled.div<{ highlight?: boolean }>`
   font-size: 22px;
   cursor: pointer;
   transition: all 0.2s ease;
+  max-width: 100%;
+  overflow: hidden;
   
   &:hover {
     border-color: #666;
@@ -76,25 +80,27 @@ const ExpandedContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  overflow: hidden;
 `;
 
 const UserDetail = styled.div`
   display: flex;
-  margin-bottom: 6px;
-  justify-content: space-between;
+  flex-direction: column;
+  margin-bottom: 12px;
   width: 100%;
 `;
 
 const DetailLabel = styled.span`
   color: #999;
-  width: 80px;
-  flex-shrink: 0;
+  margin-bottom: 4px;
 `;
 
 const DetailValue = styled.span`
   color: #fff;
-  flex-grow: 1;
-  text-align: right;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  font-size: 18px;
 `;
 
 const AddFriendButton = styled.button`

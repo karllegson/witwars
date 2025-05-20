@@ -44,6 +44,7 @@ const StatsLabel = styled.div`
   font-family: 'VT323', monospace;
   font-size: 18px;
   color: #ccc;
+  margin-right: 12px;
 `;
 
 const StatsValue = styled.div`
@@ -854,20 +855,27 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
               <StatsRow>
                 <StatsLabel>Bio:</StatsLabel>
                 <StatsValue style={{ width: 220 }}>
-                  <textarea
-                    value={bio}
-                    onChange={e => setBioState(e.target.value)}
-                    rows={2}
-                    maxLength={80}
-                    style={{
-                      width: '100%',
-                      fontFamily: 'inherit',
-                      fontSize: 16,
-                      background: '#2b2b2b',
-                      color: '#eee',
-                      border: '1px solid #444'
-                    }}
-                  />
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <textarea
+                      value={bio}
+                      onChange={e => setBioState(e.target.value)}
+                      rows={2}
+                      maxLength={80}
+                      style={{
+                        width: '100%',
+                        fontFamily: 'inherit',
+                        fontSize: 16,
+                        background: '#2b2b2b',
+                        color: '#eee',
+                        border: '1px solid #444',
+                        resize: 'none',
+                        paddingBottom: '16px'
+                      }}
+                    />
+                    <div style={{ position: 'absolute', bottom: '0', right: '5px', fontSize: '12px', color: '#999' }}>
+                      {bio ? bio.length : 0}/80
+                    </div>
+                  </div>
                 </StatsValue>
               </StatsRow>
               <StatsRow>
@@ -899,7 +907,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
               <StatsTitle>ACCOUNT INFO</StatsTitle>
               <StatsRow>
                 <StatsLabel>Bio:</StatsLabel>
-                <StatsValue>{bio || <span style={{ color: '#888' }}>No bio set</span>}</StatsValue>
+                <StatsValue style={{ maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bio || <span style={{ color: '#888' }}>No bio set</span>}</StatsValue>
               </StatsRow>
               <StatsRow>
                 <StatsLabel>Location:</StatsLabel>
@@ -946,8 +954,29 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
               <RetroButton title="LOGOUT" onClick={handleLogout} />
             </div>
           )}
+          
+
         </Content>
       </RetroWindow>
+      
+      {/* Small Report a Problem button outside the RetroWindow */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16, marginBottom: 24 }}>
+        <button 
+          onClick={() => alert('Problem report submitted!')}
+          style={{ 
+            fontSize: '12px', 
+            color: '#999', 
+            background: 'transparent', 
+            border: '1px solid #444',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontFamily: 'VT323, monospace'
+          }}
+        >
+          Report a Problem
+        </button>
+      </div>
     </AppContainer>
   );
 };
