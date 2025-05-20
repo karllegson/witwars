@@ -485,7 +485,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
                 (() => {
                   try {
                     const svg = createAvatar(pixelArt, {
-                      seed: username || 'User',
+                      seed: currentUser?.uid || 'user', // Use UID for consistent avatar generation
                       backgroundColor: [profilePictureOptions.backgroundColor],
                       skinColor: [profilePictureOptions.skinColor],
                       hair: [profilePictureOptions.hair],

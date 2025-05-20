@@ -207,7 +207,7 @@ export default function Feed() {
             <textarea
               value={postText}
               onChange={e => setPostText(e.target.value)}
-              placeholder="Write something witty..."
+              placeholder="Write something..."
               style={{ width: '100%', minHeight: 60, fontFamily: 'VT323, monospace', fontSize: 18, padding: 8, borderRadius: 6 }}
             />
             <div style={{ display: 'flex', gap: 8 }}>

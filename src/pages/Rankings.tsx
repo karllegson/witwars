@@ -227,7 +227,7 @@ export default function Rankings() {
                     {getTrophy(idx)}
                     <span style={{ marginRight: 12 }}>#{idx + 1}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Avatar profilePicture={user.profilePicture} username={user.username} size={32} />
+                      <Avatar profilePicture={user.profilePicture} username={user.username} userId={user.uid} size={32} />
                       <span>{user.username}</span>
                     </div>
                   </UserInfo>

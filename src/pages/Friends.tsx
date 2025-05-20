@@ -230,7 +230,7 @@ const Friends: React.FC = () => {
               {requests.map((request) => (
                 <PersonCard key={request.uid}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Avatar profilePicture={request.profilePicture} username={request.username} size={40} />
+                    <Avatar profilePicture={request.profilePicture} username={request.username} userId={request.uid} size={40} />
                     <PersonDetails>
                       <PersonName>{request.username}</PersonName>
                     </PersonDetails>
@@ -253,7 +253,7 @@ const Friends: React.FC = () => {
             friends.map((friend) => (
               <PersonCard key={friend.uid}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Avatar profilePicture={friend.profilePicture} username={friend.username} size={40} />
+                  <Avatar profilePicture={friend.profilePicture} username={friend.username} userId={friend.uid} size={40} />
                   <PersonDetails>
                     <PersonName>{friend.username}</PersonName>
                   </PersonDetails>

@@ -7,6 +7,7 @@ interface AvatarProps {
   profilePicture?: string | any;  // Accept any type to handle all cases
   username: string;
   size?: number;
+  userId?: string; // Add userId for stable avatar generation
 }
 
 const AvatarContainer = styled.div<{ size: number; bgColor: string }>`
@@ -51,7 +52,7 @@ const getColorFromUsername = (username: string): string => {
   return `hsl(${hue}, 65%, 35%)`; // Lower lightness for darker colors
 };
 
-export default function Avatar({ profilePicture, username, size = 40 }: AvatarProps) {
+export default function Avatar({ profilePicture, username, userId, size = 40 }: AvatarProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const firstInitial = username ? username.charAt(0).toUpperCase() : '?';
@@ -83,6 +84,7 @@ export default function Avatar({ profilePicture, username, size = 40 }: AvatarPr
               // Check if it has DiceBear avatar configuration properties
               if (parsed.skinColor || parsed.hair || parsed.eyes) {
                 const avatar = createAvatar(pixelArt, {
+                  seed: userId || username, // Use userId for consistency if available
                   backgroundColor: parsed.backgroundColor ? [parsed.backgroundColor] : undefined,
                   skinColor: parsed.skinColor ? [parsed.skinColor] : undefined,
                   hair: parsed.hair ? [parsed.hair as any] : undefined, // Use type assertion to fix type errors
@@ -118,6 +120,7 @@ export default function Avatar({ profilePicture, username, size = 40 }: AvatarPr
         if (profilePicture.skinColor || profilePicture.hair || profilePicture.eyes) {
           // It's a DiceBear config object
           const avatar = createAvatar(pixelArt, {
+            seed: userId || username, // Use userId for consistency if available
             backgroundColor: profilePicture.backgroundColor ? [profilePicture.backgroundColor] : undefined,
             skinColor: profilePicture.skinColor ? [profilePicture.skinColor] : undefined,
             hair: profilePicture.hair ? [profilePicture.hair] : undefined,
