@@ -4,9 +4,10 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import styled from 'styled-components';
+import Header from '../../components/Header';
+import RetroWindow from '../../components/RetroWindow';
+import { UserPlus } from 'lucide-react';
 
-// Re-using some styled components from Login.tsx for consistency
-// In a larger app, these might be moved to a shared components directory
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -17,58 +18,101 @@ const Container = styled.div`
   background-color: #1a1a1a;
 `;
 
+const Content = styled.div`
+  padding: 24px;
+  width: 100%;
+`;
+
+const FormContainer = styled.div`
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+`;
+
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  padding: 30px;
-  background-color: #232323;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  gap: 16px;
   width: 100%;
-  max-width: 400px;
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const Label = styled.label`
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  color: #ffcc00;
 `;
 
 const Input = styled.input`
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
+  background: #2a2a2a;
+  padding: 12px;
+  border: 1px solid #444;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  color: #33ff33;
+  outline: none;
+  transition: border 0.2s;
+  
+  &:focus {
+    border-color: #ffcc00;
+  }
 `;
 
 const Button = styled.button`
-  padding: 10px 15px;
-  background-color: #232323;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
+  background: #333;
+  color: #ffcc00;
+  border: 1px solid #ffcc00;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 14px;
+  padding: 12px;
+  margin-top: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  
   &:hover {
-    background-color: #333;
+    background: #ffcc00;
+    color: #000;
   }
-
+  
   &:disabled {
-    background-color: #ccc;
+    background: #333;
+    color: #666;
+    border-color: #666;
+    cursor: not-allowed;
   }
 `;
 
 const ErrorMessage = styled.p`
-  color: red;
-  font-size: 14px;
+  color: #ff6b6b;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
   text-align: center;
+  padding: 8px;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
 `;
 
 const StyledLink = styled(Link)`
-  margin-top: 15px;
+  margin-top: 20px;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: #33ff33;
   text-align: center;
-  color: #007bff;
+  display: block;
   text-decoration: none;
-
+  
   &:hover {
-    text-decoration: underline;
+    color: #ffcc00;
   }
 `;
 
@@ -120,42 +164,68 @@ const Register: React.FC = () => {
 
   return (
     <Container>
-      <h2>Register</h2>
-      <Form onSubmit={handleSubmit}>
-        <Input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <Input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="Password (min. 6 characters)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Registering...' : 'Register'}
-        </Button>
-      </Form>
-      <StyledLink to="/login">Already have an account? Login</StyledLink>
+      <Header title="Comedy Legend" subtitle="NEW USER CREATION" />
+      
+      <RetroWindow title="REGISTER.EXE">
+        <Content>
+          <FormContainer>
+            <Form onSubmit={handleSubmit}>
+              <InputGroup>
+                <Label htmlFor="username">USERNAME:</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </InputGroup>
+              
+              <InputGroup>
+                <Label htmlFor="email">EMAIL:</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </InputGroup>
+              
+              <InputGroup>
+                <Label htmlFor="password">PASSWORD:</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </InputGroup>
+              
+              <InputGroup>
+                <Label htmlFor="confirmPassword">CONFIRM PASSWORD:</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </InputGroup>
+              
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              
+              <Button type="submit" disabled={loading}>
+                <UserPlus size={16} />
+                {loading ? 'CREATING...' : 'REGISTER'}
+              </Button>
+              
+              <StyledLink to="/login">ALREADY HAVE AN ACCOUNT? LOGIN</StyledLink>
+            </Form>
+          </FormContainer>
+        </Content>
+      </RetroWindow>
     </Container>
   );
 };

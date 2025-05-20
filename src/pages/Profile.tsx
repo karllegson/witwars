@@ -236,6 +236,7 @@ const ProfilePage: React.FC = () => {
   const [username, setUsername] = useState<string>('');
   const [bio, setBioState] = useState<string>('');
   const [location, setLocationState] = useState<string>('');
+  const [votes, setVotes] = useState<number>(0);
   const [lastUsernameChange, setLastUsernameChange] = useState<number | null>(null);
   const [loadingSave, setLoadingSave] = useState(false);
   const [feedback, setFeedback] = useState<string>('');
@@ -297,6 +298,8 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
           setUsername(data.username);
           setBioState(data.bio || '');
           setLocationState(data.location || '');
+          // Set votes count - default to 0 if not set
+          setVotes(data.votes || 0);
           // Load saved avatar options with robust handling for accessories
           try {
             const loadedOptionsString = data.profilePicture;
@@ -415,7 +418,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
   if (authLoading) {
     return (
       <AppContainer>
-        <Header title="COMEDY KINGS" subtitle="YOUR PROFILE" />
+        <Header title="Comedy Legend" subtitle="YOUR PROFILE" />
         <RetroWindow title="PROFILE.EXE">
           <Content>
             <p>Loading authentication status...</p>
@@ -428,7 +431,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
   if (!currentUser) {
     return (
       <AppContainer>
-        <Header title="COMEDY KINGS" subtitle="JOIN THE STAGE" />
+        <Header title="Comedy Legend" subtitle="JOIN THE STAGE" />
         <RetroWindow title="ACCESS.DENIED">
           <AuthPromptContainer>
             <AuthPromptText>You need to be logged in to view your profile.</AuthPromptText>
@@ -444,7 +447,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
 
   return (
     <AppContainer>
-      <Header title="COMEDY KINGS" subtitle={`WELCOME, ${username || currentUser.email}!`}/>
+      <Header title="Comedy Legend" subtitle={`WELCOME, ${username || currentUser.email}!`}/>
       <RetroWindow title={`PROFILE.EXE`}>
         <Content>
           {/* Profile Picture & Customizer Container */}
@@ -505,7 +508,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
 
             {/* Edit Avatar Button (only shows if not editingProfile) */}
             {!editingProfile && !editMode && (
-              <RetroButton title="Customize Avatar" onClick={() => setEditingProfile(true)} style={{ marginBottom: 10 }} />
+              <RetroButton title="Edit Avatar" onClick={() => setEditingProfile(true)} style={{ marginBottom: 10 }} />
             )}
 
             {/* Avatar Customization UI (only shows if editingProfile is true) */}
@@ -823,7 +826,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
                   disabled={!canEditUsername || loadingSave}
                 />
                 <RetroButton
-                  title="Save User"
+                  title="Update"
                   onClick={handleUsernameChange}
                   style={{ marginLeft: 8, fontSize: 20, padding: '8px 18px' }}
                   disabled={!canEditUsername || loadingSave}
@@ -875,9 +878,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
                   />
                 </StatsValue>
               </StatsRow>
-              <div style={{ marginTop: 8, textAlign: 'center' }}>
-                <RetroButton title={loadingSave ? 'Saving...' : 'Save All Profile Edits'} onClick={handleSave} disabled={loadingSave} />
-              </div>
+
             </StatsSection>
           )}
           {feedback && <div style={{ color: feedback.startsWith('Failed') || feedback.startsWith('Error') ? '#ff6b6b' : '#33ff33', marginTop: 8, textAlign: 'center', fontFamily: 'VT323', fontSize: 16 }}>{feedback}</div>}
@@ -898,10 +899,6 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
                 <StatsLabel>Email:</StatsLabel>
                 <StatsValue>{currentUser?.email}</StatsValue>
               </StatsRow>
-              <StatsRow>
-                <StatsLabel>Account ID:</StatsLabel>
-                <StatsValue style={{ fontSize: '14px' }}>{currentUser.uid}</StatsValue>
-              </StatsRow>
             </StatsSection>
           )}
 
@@ -913,6 +910,10 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
                 <StatsLabel>Member Since:</StatsLabel>
                 <StatsValue>{new Date(currentUser.metadata.creationTime || Date.now()).toLocaleDateString()}</StatsValue>
               </StatsRow>
+              <StatsRow>
+                <StatsLabel>Votes:</StatsLabel>
+                <StatsValue>{votes}</StatsValue>
+              </StatsRow>
               {/* Add more stats here if needed */}
             </StatsSection>
           )}
@@ -921,8 +922,16 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
           {!editingProfile && ( // Hide these if customizing avatar
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
               <RetroButton
-                title={editMode ? 'Cancel Full Edit' : 'Edit Full Profile'}
-                onClick={() => { setEditMode(e => !e); setFeedback(''); /* Clear feedback when toggling edit mode */ }}
+                title={editMode ? 'Save' : 'Edit Profile'}
+                onClick={() => { 
+                  if (editMode) {
+                    // If in edit mode and clicking save, trigger the save functionality
+                    handleSave();
+                  }
+                  // Toggle edit mode either way
+                  setEditMode(e => !e); 
+                  setFeedback(''); // Clear feedback when toggling edit mode
+                }}
               />
               <RetroButton title="LOGOUT" onClick={handleLogout} />
             </div>

@@ -202,7 +202,7 @@ const Friends: React.FC = () => {
   if (loading) {
     return (
       <AppContainer>
-        <Header title="COMEDY KINGS" subtitle="FRIENDS" />
+        <Header title="Comedy Legend" subtitle="FRIENDS" />
         <RetroWindow title="FRIENDS.EXE">
           <LoadingContainer>
             <LoadingText>Loading...</LoadingText>
@@ -214,7 +214,7 @@ const Friends: React.FC = () => {
 
   return (
     <AppContainer>
-      <Header title="COMEDY KINGS" subtitle="FRIENDS" />
+      <Header title="Comedy Legend" subtitle="FRIENDS" />
       <RetroWindow title="FRIENDS.EXE">
         <ListContent>
           <SectionTitle>ADD FRIEND</SectionTitle>

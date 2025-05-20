@@ -129,7 +129,7 @@ export default function Vote() {
 
   return (
     <AppContainer>
-      <Header title="COMEDY KINGS" subtitle="CAST YOUR VOTE" />
+      <Header title="Comedy Legend" subtitle="CAST YOUR VOTE" />
       <RetroWindow title="VOTE.EXE">
         <Content>
 
