@@ -217,7 +217,7 @@ const Admin: React.FC = () => {
                       disabled={processingUser === user.uid}
                     >
                       <Trash2 size={16} />
-                      {processingUser === user.uid ? 'Deleting...' : 'Delete User & Data'}
+                      {processingUser === user.uid ? 'Deleting...' : ''}
                     </DeleteButton>
                   </UserCard>
                 ))

@@ -108,16 +108,48 @@ export const incrementVotes = async (userId: string): Promise<void> => {
 
 // Find a user by their username
 export const findUserByUsername = async (username: string): Promise<UserProfile | null> => {
-  const usersRef = collection(db, 'users');
-  const normalized = username.trim().toLowerCase();
-  const q = query(usersRef, where('username', '==', normalized));
-  const querySnapshot = await getDocs(q);
-  if (querySnapshot.empty) return null;
-  const userDoc = querySnapshot.docs[0];
-  return {
-    uid: userDoc.id,
-    ...userDoc.data()
-  } as UserProfile;
+  try {
+    // First try an exact case-sensitive match
+    const usersRef = collection(db, 'users');
+    const trimmed = username.trim();
+    let q = query(usersRef, where('username', '==', trimmed));
+    let querySnapshot = await getDocs(q);
+    
+    // If no results, try case-insensitive search by getting all users and filtering
+    if (querySnapshot.empty) {
+      console.log('No exact match found, trying case-insensitive search');
+      q = query(usersRef);
+      querySnapshot = await getDocs(q);
+      
+      // Manual case-insensitive filtering
+      const matchingDocs = querySnapshot.docs.filter(doc => {
+        const userData = doc.data();
+        return userData.username && 
+               userData.username.toLowerCase() === trimmed.toLowerCase();
+      });
+      
+      if (matchingDocs.length === 0) {
+        console.log('No user found with username:', trimmed);
+        return null;
+      }
+      
+      const userDoc = matchingDocs[0];
+      return {
+        uid: userDoc.id,
+        ...userDoc.data()
+      } as UserProfile;
+    }
+    
+    // Return the exact match
+    const userDoc = querySnapshot.docs[0];
+    return {
+      uid: userDoc.id,
+      ...userDoc.data()
+    } as UserProfile;
+  } catch (error) {
+    console.error('Error finding user by username:', error);
+    return null;
+  }
 };
 
 // Send a friend request
