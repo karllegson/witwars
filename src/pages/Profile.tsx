@@ -52,6 +52,23 @@ const StatsValue = styled.div`
   color: #fff;
 `;
 
+const BgColor = styled.div`
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: #fff;
+`;
+
+const SpinnerAnimation = styled.div`
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  &.avatar-spinner {
+    animation: spin 1s linear infinite;
+  }
+`;
+
 const AuthPromptContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -261,6 +278,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
   backgroundColor: BG_COLORS[0],
 };
   const [profilePictureOptions, setProfilePictureOptions] = useState<AvatarOptions>(initialAvatarOptions);
+  const [profileDataLoaded, setProfileDataLoaded] = useState<boolean>(false);
 
   // Define base attributes for trait previews directly
   const BASE_PREVIEW_SEED = 'traitPreview';
@@ -296,6 +314,8 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
             console.error("Error parsing profilePicture options:", error);
             setProfilePictureOptions(initialAvatarOptions); // Fallback on error
           }
+          // Mark profile data as loaded
+          setProfileDataLoaded(true);
         }
       }
     };
@@ -431,30 +451,56 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
           <div style={{ width: '100%', maxWidth: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 auto 16px auto', padding: '8px 0' }}>
             {/* Avatar SVG Preview (always shown) */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 10 }}>
-              {(() => {
-                try {
-                  const svg = createAvatar(pixelArt, {
-                    seed: username || 'User',
-                    backgroundColor: [profilePictureOptions.backgroundColor],
-                    skinColor: [profilePictureOptions.skinColor],
-                    hair: [profilePictureOptions.hair],
-                    hairColor: [profilePictureOptions.hairColor],
-                    eyes: [profilePictureOptions.eyes],
-                    mouth: [profilePictureOptions.mouth],
-                    clothing: [profilePictureOptions.clothing],
-                    accessories: profilePictureOptions.accessories === 'none' ? undefined : [profilePictureOptions.accessories],
-                  }).toString();
-                  return (
-                    <div
-                      style={{ width: 110, height: 110, borderRadius: '50%', border: '3px solid #ffcc00', marginBottom: 14, background: '#111', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      dangerouslySetInnerHTML={{ __html: svg }}
-                    />
-                  );
-                } catch (e) {
-                  console.error("Avatar creation error:", e);
-                  return <div style={{ color: 'red', width: 110, height: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid red', borderRadius: '50%' }}>Avatar Error</div>;
-                }
-              })()}
+              {!profileDataLoaded ? (
+                // Loading spinner while profile data is loading
+                <div 
+                  style={{ 
+                    width: 110, 
+                    height: 110, 
+                    borderRadius: '50%', 
+                    border: '3px solid #ffcc00', 
+                    marginBottom: 14, 
+                    background: '#111', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center'
+                  }}
+                >
+                  <SpinnerAnimation className="avatar-spinner" style={{
+                    width: 40,
+                    height: 40,
+                    border: '4px solid rgba(255, 204, 0, 0.3)',
+                    borderTop: '4px solid #ffcc00',
+                    borderRadius: '50%'
+                  }} />
+                </div>
+              ) : (
+                // Once profile data is loaded, show the actual avatar
+                (() => {
+                  try {
+                    const svg = createAvatar(pixelArt, {
+                      seed: username || 'User',
+                      backgroundColor: [profilePictureOptions.backgroundColor],
+                      skinColor: [profilePictureOptions.skinColor],
+                      hair: [profilePictureOptions.hair],
+                      hairColor: [profilePictureOptions.hairColor],
+                      eyes: [profilePictureOptions.eyes],
+                      mouth: [profilePictureOptions.mouth],
+                      clothing: [profilePictureOptions.clothing],
+                      accessories: profilePictureOptions.accessories === 'none' ? undefined : [profilePictureOptions.accessories],
+                    }).toString();
+                    return (
+                      <div
+                        style={{ width: 110, height: 110, borderRadius: '50%', border: '3px solid #ffcc00', marginBottom: 14, background: '#111', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        dangerouslySetInnerHTML={{ __html: svg }}
+                      />
+                    );
+                  } catch (e) {
+                    console.error("Avatar creation error:", e);
+                    return <div style={{ color: 'red', width: 110, height: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid red', borderRadius: '50%' }}>Avatar Error</div>;
+                  }
+                })()
+              )}
             </div>
 
             {/* Edit Avatar Button (only shows if not editingProfile) */}
