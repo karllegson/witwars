@@ -374,8 +374,11 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
       };
 
       console.log("handleSave: Attempting to call setProfilePicture with sanitized options:", JSON.stringify(optionsToSave, null, 2));
-      await setProfilePicture(currentUser.uid, JSON.stringify(optionsToSave)); // Save the sanitized object
-      console.log("handleSave: setProfilePicture call completed.");
+      // Store the optionsToSave directly rather than stringifying it
+      // This creates a consistent format that other components can use
+      const profilePicData = JSON.stringify(optionsToSave);
+      await setProfilePicture(currentUser.uid, profilePicData);
+      console.log("handleSave: setProfilePicture call completed with data:", profilePicData);
 
       // The `editMode` check is only for bio/location, avatar options are saved above regardless.
       if (editMode) {
@@ -712,65 +715,69 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
                       return <div style={{ width: 38, height: 38, border: '1px dashed red', fontSize: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Err</div>;
                     }
                   })}
-                  {selectedCategory === 'accessories' && ACCESSORIES.map(a => {
-                    if (a === 'none') {
-                      return (
-                        <button key="none-accessory" onClick={() => setProfilePictureOptions(o => ({ ...o, accessories: 'none' }))}
-                          style={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: 8,
-                            border: profilePictureOptions.accessories === 'none' ? '3px solid #ffcc00' : '2px solid #444',
-                            background: '#333',
-                            padding: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            overflow: 'hidden',
-                            cursor: 'pointer'
-                          }}
-                          title="No Accessory"
-                        >
-                          {/* No accessory icon (simple circle with a line through it) */}
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10" stroke="#aaa" strokeOpacity="0.7" />
-                            <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" />
-                          </svg>
-                        </button>
-                      );
-                    }
+                  {selectedCategory === 'accessories' && ACCESSORIES.map(accessory => {
                     try {
-                      const svg = createAvatar(pixelArt, {
+                      // For 'none', show a simple icon
+                      if (accessory === 'none') {
+                        return (
+                          <button 
+                            key="no-accessory" 
+                            onClick={() => setProfilePictureOptions(o => ({ ...o, accessories: 'none' }))} 
+                            style={{
+                              width: 38,
+                              height: 38,
+                              borderRadius: 8,
+                              border: profilePictureOptions.accessories === 'none' ? '3px solid #ffcc00' : '2px solid #444',
+                              background: '#232323',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 20,
+                              color: '#ccc',
+                              cursor: 'pointer',
+                              margin: 2
+                            }}
+                          >
+                            ❌
+                          </button>
+                        );
+                      }
+                      
+                      // For normal accessories, show preview
+                      const previewSvg = createAvatar(pixelArt, {
                         seed: BASE_PREVIEW_SEED,
                         skinColor: [BASE_PREVIEW_SKIN_COLOR],
                         eyes: [BASE_PREVIEW_EYES],
                         mouth: [BASE_PREVIEW_MOUTH],
                         backgroundColor: [BASE_PREVIEW_BG_COLOR],
-                        accessories: [a],
+                        accessories: [accessory],
                       }).toString();
+                      
                       return (
-                        <button key={a} onClick={() => setProfilePictureOptions(o => ({ ...o, accessories: a }))}
+                        <button 
+                          key={accessory} 
+                          onClick={() => setProfilePictureOptions(o => ({ ...o, accessories: accessory }))} 
                           style={{
                             width: 38,
                             height: 38,
                             borderRadius: 8,
-                            border: profilePictureOptions.accessories === a ? '3px solid #ffcc00' : '2px solid #444',
-                            background: '#333',
-                            padding: 0,
+                            border: profilePictureOptions.accessories === accessory ? '3px solid #ffcc00' : '2px solid #444',
+                            background: '#232323',
+                            padding: 2,
+                            cursor: 'pointer',
+                            margin: 2,
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            overflow: 'hidden',
-                            cursor: 'pointer'
+                            justifyContent: 'center'
                           }}
-                          title={a}
+                          title={accessory}
                         >
-                          <div dangerouslySetInnerHTML={{ __html: svg }} style={{ width: 30, height: 30, transform: 'scale(1.5)' }} />
+                          <div dangerouslySetInnerHTML={{ __html: previewSvg }} style={{ width: 30, height: 30, transform: 'scale(1.5)' }} />
                         </button>
                       );
                     } catch (e) {
                       console.error('Accessory preview error:', e);
-                      return <div style={{ width: 38, height: 38, border: '1px solid red', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red', fontSize: '10px' }}>Err</div>;
+                      return <div style={{ width: 38, height: 38, border: '1px dashed red', fontSize: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Err</div>;
                     }
                   })}
                   {selectedCategory === 'backgroundColor' && BG_COLORS.map(c => (

@@ -76,6 +76,7 @@ export default function Avatar({ profilePicture, username, size = 40 }: AvatarPr
         else if (profilePicture.startsWith('{')) {
           try {
             const parsed = JSON.parse(profilePicture);
+            console.log('Parsed profile picture JSON:', parsed);
             
             // Generate DiceBear avatar URL from the configuration
             if (parsed && typeof parsed === 'object') {
@@ -84,18 +85,19 @@ export default function Avatar({ profilePicture, username, size = 40 }: AvatarPr
                 const avatar = createAvatar(pixelArt, {
                   backgroundColor: parsed.backgroundColor ? [parsed.backgroundColor] : undefined,
                   skinColor: parsed.skinColor ? [parsed.skinColor] : undefined,
-                  hair: parsed.hair ? [parsed.hair] : undefined,
+                  hair: parsed.hair ? [parsed.hair as any] : undefined, // Use type assertion to fix type errors
                   hairColor: parsed.hairColor ? [parsed.hairColor] : undefined,
                   eyes: parsed.eyes ? [parsed.eyes] : undefined,
                   mouth: parsed.mouth ? [parsed.mouth] : undefined,
                   clothing: parsed.clothing ? [parsed.clothing] : undefined,
-                  accessories: parsed.accessories && parsed.accessories !== 'none' ? [parsed.accessories] : undefined,
+                  accessories: parsed.accessories && parsed.accessories !== 'none' ? [parsed.accessories as any] : [],
                 });
                 
                 // Get avatar as data URL
                 url = avatar.toDataUri();
-                console.log('Generated DiceBear avatar for', username);
+                console.log('Successfully generated DiceBear avatar for', username);
               } else {
+                console.log('JSON does not contain avatar properties', parsed);
                 // If it's not a DiceBear config, check for common URL properties
                 url = parsed.url || parsed.src || parsed.imageUrl || parsed.path;
               }
@@ -123,7 +125,7 @@ export default function Avatar({ profilePicture, username, size = 40 }: AvatarPr
             eyes: profilePicture.eyes ? [profilePicture.eyes] : undefined,
             mouth: profilePicture.mouth ? [profilePicture.mouth] : undefined,
             clothing: profilePicture.clothing ? [profilePicture.clothing] : undefined,
-            accessories: profilePicture.accessories && profilePicture.accessories !== 'none' ? [profilePicture.accessories] : undefined,
+            accessories: profilePicture.accessories && profilePicture.accessories !== 'none' ? [profilePicture.accessories as any] : [],
           });
           
           // Get avatar as data URL
