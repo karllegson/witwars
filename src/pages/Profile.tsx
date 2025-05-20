@@ -243,6 +243,8 @@ const ProfilePage: React.FC = () => {
   const [loadingSave, setLoadingSave] = useState(false);
   const [feedback, setFeedback] = useState<string>('');
   const [editMode, setEditMode] = useState(false);
+  const [showReportForm, setShowReportForm] = useState<boolean>(false);
+  const [reportText, setReportText] = useState<string>('');
 
   // Basic avatar customization categories
   // DiceBear pixel-art valid options (v9.x)
@@ -959,23 +961,116 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
         </Content>
       </RetroWindow>
       
-      {/* Small Report a Problem button outside the RetroWindow */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16, marginBottom: 24 }}>
-        <button 
-          onClick={() => alert('Problem report submitted!')}
-          style={{ 
-            fontSize: '12px', 
-            color: '#999', 
-            background: 'transparent', 
+      {/* Report a Problem section outside the RetroWindow */}
+      <div style={{ marginTop: 16, marginBottom: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {showReportForm ? (
+          <div style={{ 
+            width: '100%', 
+            maxWidth: '400px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '8px',
+            padding: '12px',
+            background: '#232323',
             border: '1px solid #444',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontFamily: 'VT323, monospace'
-          }}
-        >
-          Report a Problem
-        </button>
+            borderRadius: '4px'
+          }}>
+            <div style={{ fontFamily: 'VT323, monospace', fontSize: '16px', marginBottom: '4px', color: '#ccc' }}>
+              Report a Problem
+            </div>
+            <textarea
+              value={reportText}
+              onChange={(e) => setReportText(e.target.value)}
+              placeholder="Please describe the issue..."
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '8px',
+                background: '#2b2b2b',
+                border: '1px solid #444',
+                borderRadius: '4px',
+                color: '#fff',
+                fontFamily: 'VT323, monospace',
+                fontSize: '14px',
+                resize: 'none'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowReportForm(false);
+                  setReportText('');
+                }}
+                style={{
+                  fontSize: '12px',
+                  padding: '4px 8px',
+                  background: 'transparent',
+                  border: '1px solid #444',
+                  borderRadius: '4px',
+                  color: '#999',
+                  cursor: 'pointer',
+                  fontFamily: 'VT323, monospace'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (reportText.trim()) {
+                    try {
+                      setLoadingSave(true); // Reuse the loading state
+                      // Import at the top of the file
+                      const { submitProblemReport } = await import('../utils/reportService.js');
+                      await submitProblemReport(
+                        currentUser?.uid || 'anonymous',
+                        username || 'anonymous',
+                        reportText
+                      );
+                      alert('Thank you for your report. We will look into this issue.');
+                      setShowReportForm(false);
+                      setReportText('');
+                    } catch (error: any) {
+                      alert(`Error submitting report: ${error.message}`);
+                      console.error('Error submitting report:', error);
+                    } finally {
+                      setLoadingSave(false);
+                    }
+                  } else {
+                    alert('Please describe the issue before submitting.');
+                  }
+                }}
+                style={{
+                  fontSize: '12px',
+                  padding: '4px 8px',
+                  background: '#333',
+                  border: '1px solid #555',
+                  borderRadius: '4px',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontFamily: 'VT323, monospace'
+                }}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button 
+            onClick={() => setShowReportForm(true)}
+            style={{ 
+              fontSize: '12px', 
+              color: '#999', 
+              background: 'transparent', 
+              border: '1px solid #444',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontFamily: 'VT323, monospace'
+            }}
+          >
+            Report a Problem
+          </button>
+        )}
       </div>
     </AppContainer>
   );

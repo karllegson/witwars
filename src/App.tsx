@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 // Layouts & Protected Routes
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './contexts/AdminRoute';
 import MainLayout from './components/MainLayout';
 
 // Page Components
@@ -13,6 +14,7 @@ import Vote from './pages/Vote';
 import Friends from './pages/Friends';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import Reports from './pages/Reports';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 
@@ -43,7 +45,12 @@ function App() {
             <Route path="/feed" element={<Feed />} />
             <Route path="/vote" element={<Vote />} />
             <Route path="/friends" element={<Friends />} />
-            <Route path="/admin" element={<Admin />} />
+            
+            {/* Admin-only Routes */}
+            <Route element={<AdminRoute children={<Outlet />} />}>
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/reports" element={<Reports />} />
+            </Route>
             {/* Add other strictly protected routes here */}
           </Route>
         </Route>
