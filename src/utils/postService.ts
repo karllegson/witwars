@@ -1,5 +1,19 @@
 import { db } from '../firebase';
-import { collection, addDoc, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  where, 
+  getDocs, 
+  getDoc,
+  Timestamp, 
+  orderBy,
+  doc, 
+  deleteDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove
+} from 'firebase/firestore';
 
 export interface Post {
   id?: string;
@@ -27,9 +41,53 @@ export const createPost = async (post: Omit<Post, 'id' | 'timestamp'>) => {
 };
 
 // Delete a post by ID
-import { doc, deleteDoc } from 'firebase/firestore';
 export const deletePost = async (postId: string) => {
   await deleteDoc(doc(db, 'posts', postId));
+};
+
+// Toggle like on a post
+export const toggleLike = async (postId: string, userId: string): Promise<Post> => {
+  // Get the post
+  const postRef = doc(db, 'posts', postId);
+  const postSnap = await getDoc(postRef);
+  
+  if (!postSnap.exists()) {
+    throw new Error('Post not found');
+  }
+  
+  const postData = postSnap.data();
+  // Ensure all fields exist with proper defaults
+  const post = { 
+    id: postId, 
+    authorId: postData.authorId,
+    text: postData.text,
+    timestamp: postData.timestamp,
+    likes: postData.likes || 0,
+    likedBy: postData.likedBy || []
+  } as Post;
+  
+  // Check if user already liked this post
+  const alreadyLiked = post.likedBy.includes(userId);
+  
+  if (alreadyLiked) {
+    // Unlike: Remove user from likedBy array and decrease likes count
+    await updateDoc(postRef, {
+      likedBy: arrayRemove(userId),
+      likes: post.likes > 0 ? post.likes - 1 : 0 // Prevent negative likes
+    });
+    post.likedBy = post.likedBy.filter(id => id !== userId);
+    post.likes = post.likes > 0 ? post.likes - 1 : 0;
+  } else {
+    // Like: Add user to likedBy array and increase likes count
+    await updateDoc(postRef, {
+      likedBy: arrayUnion(userId),
+      likes: (post.likes || 0) + 1
+    });
+    post.likedBy = [...post.likedBy, userId];
+    post.likes = (post.likes || 0) + 1;
+  }
+  
+  return post;
 };
 
 // Fetch posts by a list of user UIDs

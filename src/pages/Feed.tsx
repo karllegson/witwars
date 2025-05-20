@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Heart, Share2 } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
 import Avatar from '../components/Avatar';
@@ -8,7 +8,7 @@ import AppContainer from '../components/AppContainer';
 import RetroButton from '../components/RetroButton';
 import { useAuth } from '../contexts/AuthContext';
 import { getFriends } from '../utils/friendService';
-import { createPost, getPostsByAuthors, Post, deletePost } from '../utils/postService';
+import { createPost, getPostsByAuthors, Post, deletePost, toggleLike } from '../utils/postService';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -171,9 +171,31 @@ export default function Feed() {
   };
 
 
-  // Like functionality not implemented for Firestore version yet
-  const handleLike = async () => {
-    alert('Like feature coming soon!');
+  // Toggle like functionality
+  const handleLike = async (postId: string) => {
+    if (!currentUser) return;
+    
+    try {
+      // Call toggleLike function and update the post in the local state
+      const updatedPost = await toggleLike(postId, currentUser.uid);
+      
+      // Update posts array with the updated post
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post.id === postId) {
+            // Preserve author information when updating post
+            return {
+              ...post,
+              likes: updatedPost.likes,
+              likedBy: updatedPost.likedBy || []
+            };
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
   };
 
   return (
@@ -212,16 +234,13 @@ export default function Feed() {
                   </div>
                 </div>
                 <PostActions>
-                  <ActionButton onClick={handleLike}>
+                  <ActionButton onClick={() => handleLike(item.id!)}>
                     <Heart
                       size={24}
                       color={'#ffffff'}
-                      fill={'none'}
+                      fill={currentUser && Array.isArray(item.likedBy) && item.likedBy.includes(currentUser.uid) ? '#ff6b6b' : 'none'}
                     />
                     <ActionText>{item.likes}</ActionText>
-                  </ActionButton>
-                  <ActionButton>
-                    <Share2 size={24} color="#ffffff" />
                   </ActionButton>
                   {currentUser && item.authorId === currentUser.uid && (
                     <ActionButton onClick={() => handleDelete(item.id!)}>
