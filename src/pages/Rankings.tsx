@@ -1,9 +1,9 @@
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
-import { getAllUsersByVotes, UserProfile, sendFriendRequest } from '../utils/friendService';
+import { getAllUsersByVotes, UserProfile, sendFriendRequest, getFriends } from '../utils/friendService';
 import Avatar from '../components/Avatar';
 import { useAuth } from '../contexts/AuthContext';
-import { ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
+import { ChevronDown, ChevronUp, UserPlus, Check } from 'lucide-react';
 
 const Container = styled.div`
   padding: 32px 16px 80px 16px;
@@ -139,9 +139,10 @@ export default function Rankings() {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [friendRequestStatus, setFriendRequestStatus] = useState<Record<string, string>>({});
   const [requestLoading, setRequestLoading] = useState<Record<string, boolean>>({});
+  const [friendList, setFriendList] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
         // Fetch all users with at least 1 vote
@@ -156,14 +157,22 @@ export default function Rankings() {
         });
         
         setUsers(allUsers);
+        
+        // Fetch current user's friends if logged in
+        if (currentUser) {
+          const friends = await getFriends(currentUser.uid);
+          const friendIds = friends.map(friend => friend.uid);
+          setFriendList(friendIds);
+          console.log('Friend IDs:', friendIds);
+        }
       } catch (error) {
-        console.error('Error fetching ranked users:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchUsers();
-  }, []); // Only fetch on initial render
+    fetchData();
+  }, [currentUser]); // Re-fetch when user changes
 
   const handleSendFriendRequest = async (toUser: UserProfile) => {
     if (!currentUser) return;
@@ -242,22 +251,31 @@ export default function Rankings() {
                     
                     {currentUser && currentUser.uid !== user.uid && (
                       <div style={{ marginTop: 8 }}>
-                        <AddFriendButton 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSendFriendRequest(user);
-                          }}
-                          disabled={requestLoading[user.uid] || friendRequestStatus[user.uid] === 'Request sent!'}
-                        >
-                          <UserPlus size={14} />
-                          {requestLoading[user.uid] ? 'Sending...' : 
-                           friendRequestStatus[user.uid] === 'Request sent!' ? 'Request sent' : 'Add Friend'}
-                        </AddFriendButton>
-                        
-                        {friendRequestStatus[user.uid] && friendRequestStatus[user.uid] !== 'Request sent!' && (
-                          <div style={{ color: '#ff6b6b', fontSize: '14px', marginTop: '4px' }}>
-                            {friendRequestStatus[user.uid]}
-                          </div>
+                        {friendList.includes(user.uid) ? (
+                          <AddFriendButton disabled={true}>
+                            <Check size={14} />
+                            Already Friends
+                          </AddFriendButton>
+                        ) : (
+                          <>
+                            <AddFriendButton 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSendFriendRequest(user);
+                              }}
+                              disabled={requestLoading[user.uid] || friendRequestStatus[user.uid] === 'Request sent!'}
+                            >
+                              <UserPlus size={14} />
+                              {requestLoading[user.uid] ? 'Sending...' : 
+                               friendRequestStatus[user.uid] === 'Request sent!' ? 'Request sent' : 'Add Friend'}
+                            </AddFriendButton>
+                            
+                            {friendRequestStatus[user.uid] && friendRequestStatus[user.uid] !== 'Request sent!' && (
+                              <div style={{ color: '#ff6b6b', fontSize: '14px', marginTop: '4px' }}>
+                                {friendRequestStatus[user.uid]}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     )}

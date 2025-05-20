@@ -927,7 +927,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
 
           {/* Main Control Buttons (Edit/Save Full Profile & Logout) */}
           {!editingProfile && ( // Hide these if customizing avatar
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: 24 }}>
               <RetroButton
                 title={editMode ? 'Save' : 'Edit Profile'}
                 onClick={() => { 

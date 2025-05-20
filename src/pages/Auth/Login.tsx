@@ -5,21 +5,21 @@ import { auth } from '../../firebase';
 import styled from 'styled-components';
 import Header from '../../components/Header';
 import RetroWindow from '../../components/RetroWindow';
+import AppContainer from '../../components/AppContainer';
+import RetroButton from '../../components/RetroButton';
 import { Joystick } from 'lucide-react';
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  background-color: #1a1a1a;
-`;
 
 const Content = styled.div`
   padding: 24px;
   width: 100%;
+`;
+
+const SectionTitle = styled.div`
+  font-family: 'Press Start 2P', cursive;
+  font-size: 14px;
+  color: #ffcc00;
+  margin-bottom: 12px;
+  text-align: center;
 `;
 
 const FormContainer = styled.div`
@@ -134,12 +134,13 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Container>
+    <AppContainer>
       <Header title="Comedy Legend" subtitle="ACCESS TERMINAL" />
       
       <RetroWindow title="LOGIN.EXE">
         <Content>
           <FormContainer>
+            <SectionTitle>ENTER ACCESS CREDENTIALS</SectionTitle>
             <Form onSubmit={handleSubmit}>
               <InputGroup>
                 <Label htmlFor="email">EMAIL:</Label>
@@ -166,7 +167,7 @@ const Login: React.FC = () => {
               {error && <ErrorMessage>{error}</ErrorMessage>}
               
               <Button type="submit" disabled={loading}>
-                <Joystick size={16} style={{ marginRight: '8px' }} />
+                <Joystick size={20} />
                 {loading ? 'ACCESSING...' : 'LOGIN'}
               </Button>
               
@@ -175,7 +176,14 @@ const Login: React.FC = () => {
           </FormContainer>
         </Content>
       </RetroWindow>
-    </Container>
+      
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+        <RetroButton
+          title="← BACK TO HOME"
+          onClick={() => navigate('/')}
+        />
+      </div>
+    </AppContainer>
   );
 };
 

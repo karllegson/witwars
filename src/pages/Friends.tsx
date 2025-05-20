@@ -76,14 +76,6 @@ const PersonName = styled.div`
   margin-bottom: 8px;
 `;
 
-const JokeText = styled.div`
-  font-family: 'VT323', monospace;
-  font-size: 16px;
-  color: #ccc;
-  font-style: italic;
-`;
-
-
 
 const SectionTitle = styled.h2`
   font-family: 'VT323', monospace;
@@ -241,7 +233,6 @@ const Friends: React.FC = () => {
                     <Avatar profilePicture={request.profilePicture} username={request.username} size={40} />
                     <PersonDetails>
                       <PersonName>{request.username}</PersonName>
-                      <JokeText>{request.email}</JokeText>
                     </PersonDetails>
                   </div>
                   <ActionButton onClick={() => handleAcceptRequest(request.uid)}>
@@ -265,7 +256,6 @@ const Friends: React.FC = () => {
                   <Avatar profilePicture={friend.profilePicture} username={friend.username} size={40} />
                   <PersonDetails>
                     <PersonName>{friend.username}</PersonName>
-                    <JokeText>{friend.email}</JokeText>
                   </PersonDetails>
                 </div>
                 <ActionButton

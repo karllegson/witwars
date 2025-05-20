@@ -6,21 +6,21 @@ import { auth, db } from '../../firebase';
 import styled from 'styled-components';
 import Header from '../../components/Header';
 import RetroWindow from '../../components/RetroWindow';
+import AppContainer from '../../components/AppContainer';
+import RetroButton from '../../components/RetroButton';
 import { UserPlus } from 'lucide-react';
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  background-color: #1a1a1a;
-`;
 
 const Content = styled.div`
   padding: 24px;
   width: 100%;
+`;
+
+const SectionTitle = styled.div`
+  font-family: 'Press Start 2P', cursive;
+  font-size: 14px;
+  color: #ffcc00;
+  margin-bottom: 12px;
+  text-align: center;
 `;
 
 const FormContainer = styled.div`
@@ -163,12 +163,13 @@ const Register: React.FC = () => {
   };
 
   return (
-    <Container>
+    <AppContainer>
       <Header title="Comedy Legend" subtitle="NEW USER CREATION" />
       
       <RetroWindow title="REGISTER.EXE">
         <Content>
           <FormContainer>
+            <SectionTitle>CREATE NEW ACCOUNT</SectionTitle>
             <Form onSubmit={handleSubmit}>
               <InputGroup>
                 <Label htmlFor="username">USERNAME:</Label>
@@ -226,7 +227,14 @@ const Register: React.FC = () => {
           </FormContainer>
         </Content>
       </RetroWindow>
-    </Container>
+      
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+        <RetroButton
+          title="← BACK TO HOME"
+          onClick={() => navigate('/')}
+        />
+      </div>
+    </AppContainer>
   );
 };
 
