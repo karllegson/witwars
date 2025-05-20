@@ -92,7 +92,7 @@ export default function Avatar({ profilePicture, username, userId, size = 40 }: 
                   eyes: parsed.eyes ? [parsed.eyes] : undefined,
                   mouth: parsed.mouth ? [parsed.mouth] : undefined,
                   clothing: parsed.clothing ? [parsed.clothing] : undefined,
-                  accessories: parsed.accessories && parsed.accessories !== 'none' ? [parsed.accessories as any] : [],
+                  accessories: parsed.accessories && parsed.accessories !== 'none' ? [parsed.accessories as any] : []
                 });
                 
                 // Get avatar as data URL
@@ -128,7 +128,7 @@ export default function Avatar({ profilePicture, username, userId, size = 40 }: 
             eyes: profilePicture.eyes ? [profilePicture.eyes] : undefined,
             mouth: profilePicture.mouth ? [profilePicture.mouth] : undefined,
             clothing: profilePicture.clothing ? [profilePicture.clothing] : undefined,
-            accessories: profilePicture.accessories && profilePicture.accessories !== 'none' ? [profilePicture.accessories as any] : [],
+            accessories: profilePicture.accessories && profilePicture.accessories !== 'none' ? [profilePicture.accessories as any] : []
           });
           
           // Get avatar as data URL

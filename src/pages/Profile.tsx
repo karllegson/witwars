@@ -126,7 +126,8 @@ type HairColor =
   | '28150a'
   | '009bbd'
   | 'bd1700'
-  | '91cb15';
+  | '91cb15'
+  | '000000';
 type EyeStyle =
   | 'variant12'
   | 'variant11'
@@ -249,10 +250,12 @@ const ProfilePage: React.FC = () => {
   'ffdbac', 'f5cfa0', 'e0b687', 'cb9e6e', 'a26d3d', '8d5524'
 ];
 const HAIR_STYLES: HairStyle[] = [
-  'short24', 'short12', 'short01', 'long21', 'long10', 'long01', 'short18', 'long16'
+  'short24', 'short12', 'short01', 'long21', 'long10', 'long01', 'short18', 'long16',
+  'short20', 'short22', 'short06', 'short08', 'long05', 'long07', 'long15', 'long18'
 ];
 const HAIR_COLORS: HairColor[] = [
-  'cab188', '603a14', '009bbd', 'a78961', '83623b'
+  'cab188', '603a14', '009bbd', 'a78961', '83623b', 
+  '612616', '28150a', '91cb15', 'bd1700', '611c17', '000000'
 ];
 const EYE_STYLES: EyeStyle[] = [
   'variant12', 'variant09', 'variant07', 'variant03', 'variant01'
@@ -493,7 +496,7 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
                       eyes: [profilePictureOptions.eyes],
                       mouth: [profilePictureOptions.mouth],
                       clothing: [profilePictureOptions.clothing],
-                      accessories: profilePictureOptions.accessories === 'none' ? undefined : [profilePictureOptions.accessories],
+                      accessories: profilePictureOptions.accessories === 'none' ? [] : [profilePictureOptions.accessories],
                     }).toString();
                     return (
                       <div
