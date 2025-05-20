@@ -1,13 +1,34 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
+// Type definitions
+type FirebaseFirestore = admin.firestore.Firestore;
+type DocumentReference = admin.firestore.DocumentReference;
+type Transaction = admin.firestore.Transaction;
+type DocumentSnapshot = admin.firestore.DocumentSnapshot;
+type WriteBatch = admin.firestore.WriteBatch;
+
+interface UserData {
+  username?: string;
+  email?: string;
+  friends?: string[];
+  friendRequests?: FriendRequest[];
+  [key: string]: any; // For other properties
+}
+
+interface FriendRequest {
+  fromUserId: string;
+  toUserId: string;
+  [key: string]: any;
+}
+
 admin.initializeApp();
 
 /**
  * Cloud Function that triggers when a user is deleted from Firebase Authentication
  * and automatically deletes all associated user data from Firestore
  */
-export const onUserDeleted = functions.auth.user().onDelete(async (user) => {
+export const onUserDeleted = functions.auth.user().onDelete(async (user: functions.auth.UserRecord) => {
   const db = admin.firestore();
   const userId = user.uid;
   const batch = db.batch();

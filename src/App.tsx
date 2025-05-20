@@ -12,6 +12,7 @@ import Feed from './pages/Feed';
 import Vote from './pages/Vote';
 import Friends from './pages/Friends';
 import Profile from './pages/Profile';
+import Admin from './pages/Admin';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 
@@ -42,6 +43,7 @@ function App() {
             <Route path="/feed" element={<Feed />} />
             <Route path="/vote" element={<Vote />} />
             <Route path="/friends" element={<Friends />} />
+            <Route path="/admin" element={<Admin />} />
             {/* Add other strictly protected routes here */}
           </Route>
         </Route>
