@@ -44,9 +44,15 @@ export const setUsernameWithCooldown = async (userId: string, newUsername: strin
 };
 
 // Update profile picture URL
-export const setProfilePicture = async (userId: string, url: string): Promise<void> => {
+export const setProfilePictureUrl = async (userId: string, url: string): Promise<void> => {
   const userRef = doc(db, 'users', userId);
   await updateDoc(userRef, { profilePicture: url });
+};
+
+// Update profile picture options as a stringified JSON
+export const setProfilePicture = async (userId: string, options: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, { profilePicture: options });
 };
 
 // Update bio
