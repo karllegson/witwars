@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import { getAllUsersByVotes, UserProfile } from '../utils/friendService';
+import Avatar from '../components/Avatar';
 
 const Container = styled.div`
   padding: 32px 16px 80px 16px;
@@ -59,6 +60,15 @@ export default function Rankings() {
       try {
         // Fetch all users with at least 1 vote
         const allUsers = await getAllUsersByVotes(1);
+        
+        // Debug the user data we're getting
+        console.log('Users fetched:', allUsers);
+        allUsers.forEach((user, index) => {
+          console.log(`User ${index + 1} - ${user.username}:`);
+          console.log('- Profile picture:', user.profilePicture);
+          console.log('- Data type:', typeof user.profilePicture);
+        });
+        
         setUsers(allUsers);
       } catch (error) {
         console.error('Error fetching ranked users:', error);
@@ -92,7 +102,10 @@ export default function Rankings() {
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   {getTrophy(idx)}
                   <span style={{ marginRight: 12 }}>#{idx + 1}</span>
-                  <span>{user.username}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Avatar profilePicture={user.profilePicture} username={user.username} size={32} />
+                    <span>{user.username}</span>
+                  </div>
                 </div>
                 <span style={{ color: '#ffcc00', fontWeight: 700 }}>{user.votes ?? 0} votes</span>
               </RankRow>

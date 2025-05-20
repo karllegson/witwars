@@ -1,14 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Heart, Share2 } from 'lucide-react';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
+import Avatar from '../components/Avatar';
 import AppContainer from '../components/AppContainer';
 import RetroButton from '../components/RetroButton';
 import { useAuth } from '../contexts/AuthContext';
 import { getFriends } from '../utils/friendService';
 import { createPost, getPostsByAuthors, Post, deletePost } from '../utils/postService';
-
+import { db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const Content = styled.div`
   padding: 16px;
@@ -20,13 +22,6 @@ const PostCard = styled.div`
   border: 2px solid #333;
   overflow: hidden;
   margin-bottom: 16px;
-`;
-
-const PostImage = styled.img`
-  width: 100%;
-  height: 300px;
-  object-fit: cover;
-  background: #1a1a2e;
 `;
 
 const PostActions = styled.div`
@@ -87,18 +82,21 @@ const InstructionText = styled.div`
   text-align: center;
 `;
 
-const HiddenInput = styled.input`
-  display: none;
-`;
+// Image upload functionality has been removed
+
+// Extended Post type with author information
+interface PostWithAuthor extends Post {
+  author?: {
+    username: string;
+    profilePicture?: string;
+  }
+}
 
 export default function Feed() {
   const { currentUser } = useAuth();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
-  // const [friends, setFriends] = useState<string[]>([]);
   const [postText, setPostText] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     loadFeedData();
@@ -111,12 +109,41 @@ export default function Feed() {
     if (!currentUser) return;
     setLoading(true);
     try {
+      // Get friends first
       const friendProfiles = await getFriends(currentUser.uid);
       const friendUids = friendProfiles.map(f => f.uid);
-
       const allowedUids = [currentUser.uid, ...friendUids];
+
+      // Get feed posts
       const feedPosts = await getPostsByAuthors(allowedUids);
-      setPosts(feedPosts);
+
+      // Create a map of author IDs to user profiles for quick lookup
+      const authorMap = new Map();
+      friendProfiles.forEach(profile => authorMap.set(profile.uid, profile));
+
+      // Add current user to the map if not already there
+      if (!authorMap.has(currentUser.uid)) {
+        // Fetch current user's profile
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        if (userDoc.exists()) {
+          const userData = { uid: currentUser.uid, ...userDoc.data() };
+          authorMap.set(currentUser.uid, userData);
+        }
+      }
+
+      // Add author information to each post
+      const postsWithAuthor = feedPosts.map(post => {
+        const author = authorMap.get(post.authorId);
+        return {
+          ...post,
+          author: author ? {
+            username: author.username,
+            profilePicture: author.profilePicture
+          } : undefined
+        };
+      });
+
+      setPosts(postsWithAuthor);
     } catch (error) {
       console.error('Failed to load feed:', error);
     } finally {
@@ -124,33 +151,17 @@ export default function Feed() {
     }
   };
 
-  const handlePickImage = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setSelectedImage(event.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
   const handlePost = async () => {
     if (!currentUser) return;
-    if (!postText && !selectedImage) return; // Prevent empty posts
+    if (!postText) return; // Prevent empty posts
     const newPost = {
       authorId: currentUser.uid,
       text: postText,
-      imageUrl: selectedImage || undefined,
       likes: 0,
       likedBy: [],
     };
     await createPost(newPost);
     setPostText('');
-    setSelectedImage(null);
     await loadFeedData();
   };
 
@@ -177,21 +188,9 @@ export default function Feed() {
               placeholder="Write something witty..."
               style={{ width: '100%', minHeight: 60, fontFamily: 'VT323, monospace', fontSize: 18, padding: 8, borderRadius: 6 }}
             />
-            {selectedImage && (
-              <div style={{ marginBottom: 8 }}>
-                <img src={selectedImage} alt="Selected" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 6 }} />
-              </div>
-            )}
             <div style={{ display: 'flex', gap: 8 }}>
-              <RetroButton title="Add Image" onClick={handlePickImage} />
               <RetroButton title="Post" onClick={handlePost} />
             </div>
-            <HiddenInput
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
           </div>
           {loading ? (
             <Loading>LOADING...</Loading>
@@ -203,12 +202,15 @@ export default function Feed() {
           ) : (
             posts.map((item) => (
               <PostCard key={item.id}>
-                {item.text && (
-                  <div style={{ padding: 12, fontFamily: 'VT323, monospace', fontSize: 20, color: '#fff' }}>{item.text}</div>
-                )}
-                {item.imageUrl && item.imageUrl !== '' && (
-                  <PostImage src={item.imageUrl} alt="Post" />
-                )}
+                <div style={{ display: 'flex', padding: 12, gap: 12, alignItems: 'flex-start' }}>
+                  <Avatar profilePicture={item.author?.profilePicture} username={item.author?.username || 'Unknown'} size={42} />
+                  <div>
+                    <div style={{ fontFamily: 'VT323, monospace', fontSize: 16, color: '#ffcc00', marginBottom: 4 }}>
+                      {item.author?.username || 'Unknown User'}
+                    </div>
+                    <div style={{ fontFamily: 'VT323, monospace', fontSize: 20, color: '#fff' }}>{item.text}</div>
+                  </div>
+                </div>
                 <PostActions>
                   <ActionButton onClick={handleLike}>
                     <Heart

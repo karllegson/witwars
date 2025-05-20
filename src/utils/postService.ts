@@ -4,7 +4,6 @@ import { collection, addDoc, query, where, getDocs, Timestamp, orderBy } from 'f
 export interface Post {
   id?: string;
   authorId: string;
-  imageUrl?: string;
   text?: string;
   timestamp: string;
   likes: number;
@@ -22,9 +21,6 @@ export const createPost = async (post: Omit<Post, 'id' | 'timestamp'>) => {
   };
   if (post.text && post.text.trim() !== '') {
     postData.text = post.text;
-  }
-  if (post.imageUrl && post.imageUrl.trim() !== '') {
-    postData.imageUrl = post.imageUrl;
   }
   const docRef = await addDoc(collection(db, 'posts'), postData);
   return docRef.id;

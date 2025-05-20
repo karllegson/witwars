@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import RetroWindow from '../components/RetroWindow';
+import Avatar from '../components/Avatar';
 import AppContainer from '../components/AppContainer';
 import { useAuth } from '../contexts/AuthContext';
 import { UserProfile, getFriends, getFriendRequests, sendFriendRequest, acceptFriendRequest, removeFriend } from '../utils/friendService';
@@ -236,10 +237,13 @@ const Friends: React.FC = () => {
               <SectionTitle style={{ marginTop: '32px' }}>FRIEND REQUESTS</SectionTitle>
               {requests.map((request) => (
                 <PersonCard key={request.uid}>
-                  <PersonDetails>
-                    <PersonName>{request.username}</PersonName>
-                    <JokeText>{request.email}</JokeText>
-                  </PersonDetails>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Avatar profilePicture={request.profilePicture} username={request.username} size={40} />
+                    <PersonDetails>
+                      <PersonName>{request.username}</PersonName>
+                      <JokeText>{request.email}</JokeText>
+                    </PersonDetails>
+                  </div>
                   <ActionButton onClick={() => handleAcceptRequest(request.uid)}>
                     Accept
                   </ActionButton>
@@ -257,10 +261,13 @@ const Friends: React.FC = () => {
           ) : (
             friends.map((friend) => (
               <PersonCard key={friend.uid}>
-                <PersonDetails>
-                  <PersonName>{friend.username}</PersonName>
-                  <JokeText>{friend.email}</JokeText>
-                </PersonDetails>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Avatar profilePicture={friend.profilePicture} username={friend.username} size={40} />
+                  <PersonDetails>
+                    <PersonName>{friend.username}</PersonName>
+                    <JokeText>{friend.email}</JokeText>
+                  </PersonDetails>
+                </div>
                 <ActionButton
                   style={{ background: '#ff3333', color: '#fff', marginLeft: 8 }}
                   onClick={async () => {
