@@ -1,8 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <path d="M489.9 149.1l-96 224c-5.3 13.1-18.4 20.9-31.9 20.9H150c-13.5 0-26.6-7.8-31.9-20.9l-96-224C11.7 122.3 32 96 65.1 96c15.3 0 29.7 8.3 35.9 22.1L156 192l60.4-130.8c4.9-10.5 15.6-17.2 27.3-17.2 11.7 0 22.4 6.7 27.3 17.2L331.4 192l54.9-73.9c6.3-13.8 20.7-22.1 35.9-22.1 33.1 0 53.4 26.3 43.2 53.1z" fill="#FFD700"/>
-  <path d="M349 405c0 5.5-4.5 10-10 10H173c-5.5 0-10-4.5-10-10v-10c0-5.5 4.5-10 10-10h166c5.5 0 10 4.5 10 10v10z" fill="#F59A23"/>
-  <circle cx="250" cy="220" r="30" fill="#3CB878"/>
-  <circle cx="80" cy="130" r="25" fill="#E57373"/>
-  <circle cx="250" cy="80" r="25" fill="#FFC107"/>
-  <circle cx="420" cy="130" r="25" fill="#E57373"/>
-</svg>
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 491.5 491.5" xml:space="preserve" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <ellipse style="fill:#E56353;" cx="245.76" cy="289.774" rx="174.336" ry="102.707"></ellipse> <path style="fill:#F6C358;" d="M427.392,402.452H245.76V94.456c0,0,14.005,87.609,65.338,151.954 c29.694,37.221,89.246,37.368,119.454,0.508c18.297-22.327,29.411-51.504,35.936-85.54"></path> <g> <path style="fill:#FCD462;" d="M64.128,402.452H245.76V94.456c0,0-14.005,87.609-65.338,151.954 c-29.694,37.221-89.246,37.368-119.455,0.508c-18.297-22.327-29.41-51.504-35.935-85.54"></path> <rect x="52.306" y="402.465" style="fill:#FCD462;" width="386.918" height="23.316"></rect> </g> <g> <circle style="fill:#E56353;" cx="245.76" cy="94.728" r="29.01"></circle> <circle style="fill:#E56353;" cx="462.49" cy="176.755" r="29.01"></circle> <circle style="fill:#E56353;" cx="29.01" cy="176.755" r="29.01"></circle> </g> <ellipse style="fill:#44C4A1;" cx="245.76" cy="307.489" rx="39.68" ry="59.023"></ellipse> </g></svg>
