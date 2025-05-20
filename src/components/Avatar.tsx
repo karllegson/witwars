@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { createAvatar } from '@dicebear/core';
 import { pixelArt } from '@dicebear/collection';
+import { getTopRankedUserId } from '../utils/rankingUtils';
 
 interface AvatarProps {
   profilePicture?: string | any;  // Accept any type to handle all cases
@@ -21,6 +22,7 @@ const AvatarContainer = styled.div<{ size: number; bgColor: string }>`
   justify-content: center;
   border: 2px solid #444;
   flex-shrink: 0;
+  position: relative;
 `;
 
 const AvatarImage = styled.img`
@@ -37,6 +39,8 @@ const AvatarInitial = styled.div<{ size: number }>`
   font-weight: bold;
 `;
 
+// Crown is now implemented directly in the component return
+
 // Generate a consistent color based on username
 const getColorFromUsername = (username: string): string => {
   if (!username) return '#333';
@@ -49,119 +53,132 @@ const getColorFromUsername = (username: string): string => {
   
   // Convert to hex color - use darker colors for better contrast with white text
   const hue = Math.abs(hash % 360);
-  return `hsl(${hue}, 65%, 35%)`; // Lower lightness for darker colors
+  return `hsl(${hue}, 70%, 35%)`;
 };
 
 export default function Avatar({ profilePicture, username, userId, size = 40 }: AvatarProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [isTopRanked, setIsTopRanked] = useState(false);
   const firstInitial = username ? username.charAt(0).toUpperCase() : '?';
   const bgColor = getColorFromUsername(username);
   
+  // Check if this user is the top-ranked user
+  useEffect(() => {
+    if (userId) {
+      const checkTopRanked = async () => {
+        try {
+          const topUserId = await getTopRankedUserId();
+          console.log('Avatar component - comparing UIDs:', {
+            thisUserId: userId,
+            topUserId: topUserId,
+            isMatch: userId === topUserId
+          });
+          setIsTopRanked(userId === topUserId);
+        } catch (error) {
+          console.error('Error checking top ranked user:', error);
+          setIsTopRanked(false);
+        }
+      };
+      checkTopRanked();
+    }
+  }, [userId]);
+
   // Process the profile picture data on component mount and when it changes
   useEffect(() => {
-    let url: string | null = null;
-    
-    try {
-      // Case 1: profilePicture is null or undefined
-      if (!profilePicture) {
-        url = null;
-      }
-      // Case 2: profilePicture is a URL string
-      else if (typeof profilePicture === 'string') {
-        // Check if it looks like a direct URL
-        if (profilePicture.startsWith('http') || profilePicture.startsWith('data:')) {
-          url = profilePicture;
+    const generateAvatar = async () => {
+      try {
+        // If profilePicture is a direct data URL, use it as is
+        if (typeof profilePicture === 'string' && profilePicture.startsWith('data:')) {
+          setImageUrl(profilePicture);
+          return;
         }
-        // Check if it's a DiceBear JSON configuration string
-        else if (profilePicture.startsWith('{')) {
+        
+        // Default avatar settings
+        let parsed: any = {
+          backgroundColor: 'b6e3f4',
+          skinColor: 'f5cfa0',
+          hair: 'short01',
+          hairColor: '000000',
+          eyes: 'variant09',
+          mouth: 'happy01',
+          clothing: 'variant01'
+        };
+        
+        // Parse profilePicture if it's a JSON string
+        if (typeof profilePicture === 'string' && !profilePicture.startsWith('data:')) {
           try {
-            const parsed = JSON.parse(profilePicture);
-            console.log('Parsed profile picture JSON:', parsed);
-            
-            // Generate DiceBear avatar URL from the configuration
-            if (parsed && typeof parsed === 'object') {
-              // Check if it has DiceBear avatar configuration properties
-              if (parsed.skinColor || parsed.hair || parsed.eyes) {
-                const avatar = createAvatar(pixelArt, {
-                  seed: userId || username, // Use userId for consistency if available
-                  backgroundColor: parsed.backgroundColor ? [parsed.backgroundColor] : undefined,
-                  skinColor: parsed.skinColor ? [parsed.skinColor] : undefined,
-                  hair: parsed.hair ? [parsed.hair as any] : undefined, // Use type assertion to fix type errors
-                  hairColor: parsed.hairColor ? [parsed.hairColor] : undefined,
-                  eyes: parsed.eyes ? [parsed.eyes] : undefined,
-                  mouth: parsed.mouth ? [parsed.mouth] : undefined,
-                  clothing: parsed.clothing ? [parsed.clothing] : undefined,
-                  accessories: parsed.accessories && parsed.accessories !== 'none' ? [parsed.accessories as any] : []
-                });
-                
-                // Get avatar as data URL
-                url = avatar.toDataUri();
-                console.log('Successfully generated DiceBear avatar for', username);
-              } else {
-                console.log('JSON does not contain avatar properties', parsed);
-                // If it's not a DiceBear config, check for common URL properties
-                url = parsed.url || parsed.src || parsed.imageUrl || parsed.path;
-              }
-            }
+            parsed = JSON.parse(profilePicture);
           } catch (e) {
-            console.error('Failed to parse or generate avatar from config:', e);
-            url = null;
+            console.warn('Failed to parse profilePicture string:', e);
           }
+        } 
+        // Use profilePicture directly if it's an object
+        else if (profilePicture && typeof profilePicture === 'object') {
+          parsed = profilePicture;
         }
-        // Use as-is for any other string
-        else {
-          url = profilePicture;
-        }
-      }
-      // Case 3: profilePicture is an object
-      else if (typeof profilePicture === 'object' && profilePicture !== null) {
-        // Try to extract URL or generate avatar
-        if (profilePicture.skinColor || profilePicture.hair || profilePicture.eyes) {
-          // It's a DiceBear config object
-          const avatar = createAvatar(pixelArt, {
-            seed: userId || username, // Use userId for consistency if available
-            backgroundColor: profilePicture.backgroundColor ? [profilePicture.backgroundColor] : undefined,
-            skinColor: profilePicture.skinColor ? [profilePicture.skinColor] : undefined,
-            hair: profilePicture.hair ? [profilePicture.hair] : undefined,
-            hairColor: profilePicture.hairColor ? [profilePicture.hairColor] : undefined,
-            eyes: profilePicture.eyes ? [profilePicture.eyes] : undefined,
-            mouth: profilePicture.mouth ? [profilePicture.mouth] : undefined,
-            clothing: profilePicture.clothing ? [profilePicture.clothing] : undefined,
-            accessories: profilePicture.accessories && profilePicture.accessories !== 'none' ? [profilePicture.accessories as any] : []
-          });
-          
-          // Get avatar as data URL
-          url = avatar.toDataUri();
-        } else {
-          // Try to use common URL properties
-          url = profilePicture.url || profilePicture.src || profilePicture.imageUrl || profilePicture.path;
-        }
-      }
-    } catch (error) {
-      console.error('Error processing profile picture:', error);
-      url = null;
-    }
-    
-    setImageUrl(url);
-    // Reset error state when URL changes
-    setImageError(false);
-  }, [profilePicture, username]);
 
-  // Show initials when there's no valid image URL or if image fails to load
+        // Generate the avatar
+        const avatar = createAvatar(pixelArt, {
+          seed: userId || username, // Use userId for consistency if available
+          backgroundColor: parsed.backgroundColor ? [parsed.backgroundColor] : undefined,
+          skinColor: parsed.skinColor ? [parsed.skinColor] : undefined,
+          hair: parsed.hair ? [parsed.hair as any] : undefined,
+          hairColor: parsed.hairColor ? [parsed.hairColor] : undefined,
+          eyes: parsed.eyes ? [parsed.eyes] : undefined,
+          mouth: parsed.mouth ? [parsed.mouth] : undefined,
+          clothing: parsed.clothing ? [parsed.clothing] : undefined,
+          // Add crown accessory for #1 ranked user
+          accessories: ['variant03' as any] // Force crown to appear while debugging
+        });
+        
+        // Set the avatar data URL
+        setImageUrl(avatar.toDataUri());
+      } catch (error) {
+        console.error('Error generating avatar:', error);
+        setImageUrl(null);
+      }
+    };
+
+    generateAvatar();
+  }, [profilePicture, username, userId, isTopRanked]);
+
+  // Determine if we should show initials instead of an image
   const showInitials = !imageUrl || imageError;
-  
+
   return (
-    <AvatarContainer size={size} bgColor={bgColor}>
-      {!showInitials ? (
-        <AvatarImage 
-          src={imageUrl!} 
-          alt={username} 
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        <AvatarInitial size={size}>{firstInitial}</AvatarInitial>
+    <div style={{ position: 'relative' }}>
+      {/* Crown for #1 ranked user - positioned outside the avatar container */}
+      {isTopRanked && (
+        <div
+          style={{
+            position: 'absolute',
+            top: size < 40 ? '-9px' : '-12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: size < 40 ? '24px' : '30px',
+            height: size < 40 ? '20px' : '24px',
+            zIndex: 10
+          }}
+        >
+          <img
+            src="/crown-new.svg"
+            alt="Crown"
+            style={{ width: '100%', height: '100%' }}
+          />
+        </div>
       )}
-    </AvatarContainer>
+      <AvatarContainer size={size} bgColor={showInitials ? bgColor : '#transparent'}>
+        {showInitials ? (
+          <AvatarInitial size={size}>{firstInitial}</AvatarInitial>
+        ) : (
+          <AvatarImage 
+            src={imageUrl!} 
+            alt={username} 
+            onError={() => setImageError(true)}
+          />
+        )}
+      </AvatarContainer>
+    </div>
   );
 }

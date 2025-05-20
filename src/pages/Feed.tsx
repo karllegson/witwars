@@ -225,7 +225,7 @@ export default function Feed() {
             posts.map((item) => (
               <PostCard key={item.id}>
                 <div style={{ display: 'flex', padding: 12, gap: 12, alignItems: 'flex-start' }}>
-                  <Avatar profilePicture={item.author?.profilePicture} username={item.author?.username || 'Unknown'} size={42} />
+                  <Avatar profilePicture={item.author?.profilePicture} username={item.author?.username || 'Unknown'} userId={item.authorId} size={42} />
                   <div>
                     <div style={{ fontFamily: 'VT323, monospace', fontSize: 16, color: '#ffcc00', marginBottom: 4 }}>
                       {item.author?.username || 'Unknown User'}

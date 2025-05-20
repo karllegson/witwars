@@ -269,9 +269,6 @@ const MOUTH_EXPRESSIONS: MouthExpression[] = [
 const CLOTHING: Clothing[] = [
   'variant23', 'variant17', 'variant12', 'variant09', 'variant01'
 ];
-const ACCESSORIES: (Accessory | 'none')[] = [
-  'none', 'variant04', 'variant03', 'variant02', 'variant01'
-];
 const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 'ffdfbf', 'transparent'];
 
   const initialAvatarOptions: AvatarOptions = {
@@ -721,71 +718,10 @@ const BG_COLORS: BgColor[] = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'fffadd', 
                       return <div style={{ width: 38, height: 38, border: '1px dashed red', fontSize: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Err</div>;
                     }
                   })}
-                  {selectedCategory === 'accessories' && ACCESSORIES.map(accessory => {
-                    try {
-                      // For 'none', show a simple icon
-                      if (accessory === 'none') {
-                        return (
-                          <button 
-                            key="no-accessory" 
-                            onClick={() => setProfilePictureOptions(o => ({ ...o, accessories: 'none' }))} 
-                            style={{
-                              width: 38,
-                              height: 38,
-                              borderRadius: 8,
-                              border: profilePictureOptions.accessories === 'none' ? '3px solid #ffcc00' : '2px solid #444',
-                              background: '#232323',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: 20,
-                              color: '#ccc',
-                              cursor: 'pointer',
-                              margin: 2
-                            }}
-                          >
-                            ❌
-                          </button>
-                        );
-                      }
-                      
-                      // For normal accessories, show preview
-                      const previewSvg = createAvatar(pixelArt, {
-                        seed: BASE_PREVIEW_SEED,
-                        skinColor: [BASE_PREVIEW_SKIN_COLOR],
-                        eyes: [BASE_PREVIEW_EYES],
-                        mouth: [BASE_PREVIEW_MOUTH],
-                        backgroundColor: [BASE_PREVIEW_BG_COLOR],
-                        accessories: [accessory],
-                      }).toString();
-                      
-                      return (
-                        <button 
-                          key={accessory} 
-                          onClick={() => setProfilePictureOptions(o => ({ ...o, accessories: accessory }))} 
-                          style={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: 8,
-                            border: profilePictureOptions.accessories === accessory ? '3px solid #ffcc00' : '2px solid #444',
-                            background: '#232323',
-                            padding: 2,
-                            cursor: 'pointer',
-                            margin: 2,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                          title={accessory}
-                        >
-                          <div dangerouslySetInnerHTML={{ __html: previewSvg }} style={{ width: 30, height: 30, transform: 'scale(1.5)' }} />
-                        </button>
-                      );
-                    } catch (e) {
-                      console.error('Accessory preview error:', e);
-                      return <div style={{ width: 38, height: 38, border: '1px dashed red', fontSize: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Err</div>;
-                    }
-                  })}
+                  {/* Crown accessory note */}
+                  <div style={{ marginTop: 10, fontSize: 14, color: '#999', textAlign: 'center', width: '100%' }}>
+                    👑 The #1 ranked user automatically gets a crown accessory!
+                  </div>
                   {selectedCategory === 'backgroundColor' && BG_COLORS.map(c => (
                     <button key={c} onClick={() => setProfilePictureOptions(o => ({ ...o, backgroundColor: c }))}
                       style={{
