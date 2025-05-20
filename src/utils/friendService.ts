@@ -68,18 +68,34 @@ export const setLocation = async (userId: string, location: string): Promise<voi
 };
 
 // Get all users sorted by votes descending
-export const getAllUsersByVotes = async (): Promise<UserProfile[]> => {
-  const usersRef = collection(db, 'users');
-  // Firestore does not support ordering by a possibly missing field, so we default to 0
-  const q = query(usersRef);
-  const querySnapshot = await getDocs(q);
-  const users = querySnapshot.docs.map(doc => ({
-    uid: doc.id,
-    ...doc.data()
-  })) as UserProfile[];
-  // Sort by votes descending, defaulting to 0
-  users.sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0));
-  return users;
+// If minimumVotes parameter is provided, only users with at least that many votes are returned
+export const getAllUsersByVotes = async (minimumVotes: number = 1): Promise<UserProfile[]> => {
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef);
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return [];
+    }
+    
+    const users = querySnapshot.docs.map(doc => ({
+      uid: doc.id,
+      ...doc.data()
+    })) as UserProfile[];
+    
+    // Filter by minimum votes if required
+    const filteredUsers = minimumVotes > 0 
+      ? users.filter(user => (user.votes ?? 0) >= minimumVotes)
+      : users;
+      
+    // Sort by votes descending, defaulting to 0
+    filteredUsers.sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0));
+    return filteredUsers;
+  } catch (error) {
+    console.error('Error fetching ranked users:', error);
+    return []; // Return empty array on error
+  }
 };
 
 // Increment the votes field for a user

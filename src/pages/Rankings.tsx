@@ -56,12 +56,18 @@ export default function Rankings() {
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
-      const allUsers = await getAllUsersByVotes();
-      setUsers(allUsers);
-      setLoading(false);
+      try {
+        // Fetch all users with at least 1 vote
+        const allUsers = await getAllUsersByVotes(1);
+        setUsers(allUsers);
+      } catch (error) {
+        console.error('Error fetching ranked users:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchUsers();
-  }, []);
+  }, []); // Only fetch on initial render
 
   const getTrophy = (rank: number) => {
     if (rank === 0) return <Trophy>🥇</Trophy>;
