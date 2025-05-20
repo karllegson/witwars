@@ -238,7 +238,7 @@ export default function Rankings() {
                     </div>
                   </UserInfo>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: '#ffcc00', fontWeight: 700 }}>{user.votes ?? 0} votes</span>
+                    <span style={{ color: '#ffcc00', fontWeight: 700 }}>{user.votes ?? 0} {(user.votes ?? 0) === 1 ? 'vote' : 'votes'}</span>
                     {expandedUser === user.uid ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                   </div>
                 </RankRowHeader>

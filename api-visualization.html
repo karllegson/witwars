@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WitWars API Architecture</title>
+  <style>
+    :root {
+      --primary: #4285F4;
+      --secondary: #34A853;
+      --dark: #1E293B;
+      --light: #F8FAFC;
+      --danger: #EA4335;
+      --warning: #FBBC05;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: var(--light);
+      color: var(--dark);
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    h1 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      font-size: 2.5rem;
+    }
+    
+    .subtitle {
+      color: var(--gray-400);
+      font-size: 1.1rem;
+    }
+    
+    .architecture {
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    
+    .section {
+      flex: 1;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      border-top: 5px solid var(--primary);
+    }
+    
+    .section h2 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .section h2 svg {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .endpoint-group {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 1rem;
+      margin-left: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .endpoint-group h3 {
+      margin-bottom: 0.75rem;
+      color: var(--dark);
+      font-size: 1.2rem;
+    }
+    
+    .endpoint {
+      background: var(--gray-100);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      border-left: 3px solid var(--primary);
+    }
+    
+    .endpoint.trigger {
+      border-left-color: var(--warning);
+    }
+    
+    .endpoint.cloud-function {
+      border-left-color: var(--secondary);
+    }
+    
+    .endpoint.client {
+      border-left-color: var(--primary);
+    }
+    
+    .endpoint h4 {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    
+    .endpoint-tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-weight: bold;
+      color: white;
+    }
+    
+    .endpoint-tag.trigger {
+      background-color: var(--warning);
+    }
+    
+    .endpoint-tag.cloud {
+      background-color: var(--secondary);
+    }
+    
+    .endpoint-tag.client {
+      background-color: var(--primary);
+    }
+    
+    .endpoint-desc {
+      font-size: 0.85rem;
+      color: var(--gray-400);
+      margin-bottom: 0.5rem;
+    }
+    
+    .endpoint-params {
+      font-size: 0.8rem;
+      color: var(--gray-400);
+      margin-top: 0.5rem;
+    }
+    
+    .endpoint-params span {
+      font-family: monospace;
+      color: var(--dark);
+      background: var(--gray-200);
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+    }
+    
+    .data-model {
+      margin-top: 3rem;
+    }
+    
+    .data-model h2 {
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      font-size: 1.8rem;
+      text-align: center;
+    }
+    
+    .model-container {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+    }
+    
+    .model-card {
+      flex: 1;
+      max-width: 400px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+    
+    .model-header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    
+    .model-body {
+      padding: 1rem;
+    }
+    
+    .model-field {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .model-field:last-child {
+      border-bottom: none;
+    }
+    
+    .field-name {
+      font-weight: bold;
+      font-family: monospace;
+    }
+    
+    .field-type {
+      color: var(--gray-400);
+      font-size: 0.85rem;
+      font-family: monospace;
+    }
+    
+    .field-desc {
+      font-size: 0.8rem;
+      color: var(--gray-400);
+      padding-top: 0.2rem;
+    }
+    
+    .diagram {
+      margin-top: 3rem;
+      text-align: center;
+    }
+    
+    .diagram h2 {
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      font-size: 1.8rem;
+    }
+    
+    .diagram-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+      overflow-x: auto;
+    }
+    
+    .diagram svg {
+      max-width: 100%;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      color: var(--gray-400);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>WitWars API Architecture</h1>
+      <p class="subtitle">Comprehensive overview of endpoints, data flow, and user systems</p>
+    </header>
+    
+    <div class="architecture">
+      <!-- Firebase Cloud Functions -->
+      <div class="section">
+        <h2>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Firebase Cloud Functions
+        </h2>
+        
+        <div class="endpoint-group">
+          <h3>Authentication Triggers</h3>
+          
+          <div class="endpoint trigger">
+            <h4>
+              onUserDeleted
+              <span class="endpoint-tag trigger">AUTH TRIGGER</span>
+            </h4>
+            <p class="endpoint-desc">Triggers when a user is deleted from Firebase Auth</p>
+            <ul>
+              <li>Deletes user's posts</li>
+              <li>Removes user from others' friend lists</li>
+              <li>Removes user from friend requests</li>
+              <li>Removes user's likes from posts</li>
+              <li>Deletes user document</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="endpoint-group">
+          <h3>HTTPS Callable Functions</h3>
+          
+          <div class="endpoint cloud-function">
+            <h4>
+              removeFriend
+              <span class="endpoint-tag cloud">CALLABLE</span>
+            </h4>
+            <p class="endpoint-desc">Removes bi-directional friend connection</p>
+            <p class="endpoint-params">Parameters: <span>userA</span>, <span>userB</span></p>
+            <p class="endpoint-desc">Security: Caller must be authenticated as userA</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Client-Side APIs -->
+      <div class="section">
+        <h2>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Client-Side APIs
+        </h2>
+        
+        <div class="endpoint-group">
+          <h3>User Profile Management</h3>
+          
+          <div class="endpoint client">
+            <h4>
+              setUsernameWithCooldown
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Update username with 24-hour cooldown</p>
+            <p class="endpoint-params">Parameters: <span>userId</span>, <span>newUsername</span></p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              setProfilePictureUrl
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Update profile picture URL</p>
+            <p class="endpoint-params">Parameters: <span>userId</span>, <span>url</span></p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              setBio
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Update user bio</p>
+            <p class="endpoint-params">Parameters: <span>userId</span>, <span>bio</span></p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              setLocation
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Update user location</p>
+            <p class="endpoint-params">Parameters: <span>userId</span>, <span>location</span></p>
+          </div>
+        </div>
+        
+        <div class="endpoint-group">
+          <h3>Friend System</h3>
+          
+          <div class="endpoint client">
+            <h4>
+              findUserByUsername
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Search for users by username</p>
+            <p class="endpoint-params">Parameters: <span>username</span></p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              sendFriendRequest
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Send friend request to another user</p>
+            <p class="endpoint-params">Parameters: <span>fromUserId</span>, <span>toUsername</span></p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              acceptFriendRequest
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Accept incoming friend request</p>
+            <p class="endpoint-params">Parameters: <span>currentUserId</span>, <span>fromUserId</span></p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              declineFriendRequest
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Decline incoming friend request</p>
+            <p class="endpoint-params">Parameters: <span>currentUserId</span>, <span>fromUserId</span></p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              getFriendRequests
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Get all pending friend requests</p>
+            <p class="endpoint-params">Parameters: <span>userId</span></p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              getFriends
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Get all current friends</p>
+            <p class="endpoint-params">Parameters: <span>userId</span></p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              removeFriend
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Remove a friend (client-side implementation)</p>
+            <p class="endpoint-params">Parameters: <span>currentUserId</span>, <span>friendUid</span></p>
+          </div>
+        </div>
+        
+        <div class="endpoint-group">
+          <h3>Voting System</h3>
+          
+          <div class="endpoint client">
+            <h4>
+              getAllUsersByVotes
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Get users ranked by vote count</p>
+            <p class="endpoint-params">Parameters: <span>minimumVotes</span> (optional)</p>
+          </div>
+          
+          <div class="endpoint client">
+            <h4>
+              incrementVotes
+              <span class="endpoint-tag client">CLIENT</span>
+            </h4>
+            <p class="endpoint-desc">Increase vote count for a user</p>
+            <p class="endpoint-params">Parameters: <span>userId</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Data Model -->
+    <div class="data-model">
+      <h2>Data Model</h2>
+      
+      <div class="model-container">
+        <div class="model-card">
+          <div class="model-header">
+            UserProfile
+          </div>
+          <div class="model-body">
+            <div class="model-field">
+              <div>
+                <div class="field-name">uid</div>
+                <div class="field-desc">Firebase Auth UID</div>
+              </div>
+              <div class="field-type">string</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">username</div>
+                <div class="field-desc">Unique username</div>
+              </div>
+              <div class="field-type">string</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">email</div>
+              </div>
+              <div class="field-type">string</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">friends</div>
+                <div class="field-desc">Array of friend UIDs</div>
+              </div>
+              <div class="field-type">string[]</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">friendRequests</div>
+                <div class="field-desc">Array of pending request UIDs</div>
+              </div>
+              <div class="field-type">string[]</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">createdAt</div>
+              </div>
+              <div class="field-type">string</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">votes</div>
+                <div class="field-desc">Vote count</div>
+              </div>
+              <div class="field-type">number?</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">profilePicture</div>
+              </div>
+              <div class="field-type">string?</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">bio</div>
+              </div>
+              <div class="field-type">string?</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">location</div>
+              </div>
+              <div class="field-type">string?</div>
+            </div>
+            <div class="model-field">
+              <div>
+                <div class="field-name">lastUsernameChange</div>
+                <div class="field-desc">Timestamp for cooldown</div>
+              </div>
+              <div class="field-type">number?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- System Diagram -->
+    <div class="diagram">
+      <h2>System Architecture</h2>
+      
+      <div class="diagram-container">
+        <svg width="800" height="500" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+          <!-- Client Application -->
+          <rect x="50" y="50" width="300" height="400" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+          <text x="200" y="80" font-size="16" font-weight="bold" text-anchor="middle" fill="#1E293B">Client Application</text>
+          
+          <!-- Friend Service -->
+          <rect x="80" y="110" width="240" height="120" rx="5" fill="white" stroke="#4285F4" stroke-width="2"/>
+          <text x="200" y="130" font-size="14" font-weight="bold" text-anchor="middle" fill="#4285F4">Friend Service</text>
+          <text x="200" y="155" font-size="12" text-anchor="middle" fill="#94A3B8">- findUserByUsername</text>
+          <text x="200" y="175" font-size="12" text-anchor="middle" fill="#94A3B8">- sendFriendRequest</text>
+          <text x="200" y="195" font-size="12" text-anchor="middle" fill="#94A3B8">- acceptFriendRequest</text>
+          <text x="200" y="215" font-size="12" text-anchor="middle" fill="#94A3B8">- getFriends, removeFriend</text>
+          
+          <!-- Profile Service -->
+          <rect x="80" y="250" width="240" height="90" rx="5" fill="white" stroke="#4285F4" stroke-width="2"/>
+          <text x="200" y="270" font-size="14" font-weight="bold" text-anchor="middle" fill="#4285F4">Profile Service</text>
+          <text x="200" y="295" font-size="12" text-anchor="middle" fill="#94A3B8">- setUsernameWithCooldown</text>
+          <text x="200" y="315" font-size="12" text-anchor="middle" fill="#94A3B8">- setProfilePicture, setBio</text>
+          
+          <!-- Vote Service -->
+          <rect x="80" y="360" width="240" height="70" rx="5" fill="white" stroke="#4285F4" stroke-width="2"/>
+          <text x="200" y="380" font-size="14" font-weight="bold" text-anchor="middle" fill="#4285F4">Vote Service</text>
+          <text x="200" y="405" font-size="12" text-anchor="middle" fill="#94A3B8">- getAllUsersByVotes</text>
+          <text x="200" y="425" font-size="12" text-anchor="middle" fill="#94A3B8">- incrementVotes</text>
+          
+          <!-- Firebase Cloud Functions -->
+          <rect x="500" y="50" width="250" height="150" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+          <text x="625" y="80" font-size="16" font-weight="bold" text-anchor="middle" fill="#1E293B">Firebase Cloud Functions</text>
+          
+          <!-- removeFriend Function -->
+          <rect x="520" y="110" width="210" height="40" rx="5" fill="white" stroke="#34A853" stroke-width="2"/>
+          <text x="625" y="135" font-size="14" text-anchor="middle" fill="#34A853">removeFriend</text>
+          
+          <!-- onUserDeleted Function -->
+          <rect x="520" y="160" width="210" height="40" rx="5" fill="white" stroke="#FBBC05" stroke-width="2"/>
+          <text x="625" y="185" font-size="14" text-anchor="middle" fill="#FBBC05">onUserDeleted</text>
+          
+          <!-- Firestore Database -->
+          <rect x="500" y="240" width="250" height="210" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+          <text x="625" y="270" font-size="16" font-weight="bold" text-anchor="middle" fill="#1E293B">Firestore Database</text>
+          
+          <!-- Users Collection -->
+          <rect x="520" y="290" width="210" height="140" rx="5" fill="white" stroke="#4285F4" stroke-width="2"/>
+          <text x="625" y="310" font-size="14" font-weight="bold" text-anchor="middle" fill="#4285F4">users/{uid}</text>
+          <text x="625" y="335" font-size="12" text-anchor="middle" fill="#94A3B8">- username, email</text>
+          <text x="625" y="355" font-size="12" text-anchor="middle" fill="#94A3B8">- friends, friendRequests</text>
+          <text x="625" y="375" font-size="12" text-anchor="middle" fill="#94A3B8">- votes, profilePicture</text>
+          <text x="625" y="395" font-size="12" text-anchor="middle" fill="#94A3B8">- bio, location</text>
+          
+          <!-- Connection Lines -->
+          <!-- Client to Cloud Functions -->
+          <line x1="320" y1="170" x2="500" y2="130" stroke="#4285F4" stroke-width="2" stroke-dasharray="5,5"/>
+          <!-- Client to Firestore -->
+          <line x1="320" y1="290" x2="500" y2="340" stroke="#4285F4" stroke-width="2"/>
+          <line x1="320" y1="395" x2="500" y2="340" stroke="#4285F4" stroke-width="2"/>
+          <!-- Cloud Functions to Firestore -->
+          <line x1="625" y1="200" x2="625" y2="240" stroke="#34A853" stroke-width="2"/>
+          
+          <!-- Arrow Markers -->
+          <polygon points="495,130 505,130 500,140" fill="#4285F4"/>
+          <polygon points="495,340 505,340 500,330" fill="#4285F4"/>
+          <polygon points="625,235 620,225 630,225" fill="#34A853"/>
+        </svg>
+      </div>
+    </div>
+    
+    <footer>
+      <p>WitWars API Architecture Documentation &copy; 2025</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -147,7 +147,7 @@ export default function Vote() {
             ) : (
               friends.map(friend => (
                 <PersonVoteRow key={friend.uid}>
-                  <PersonName>{friend.username} <span style={{ color: '#ffcc00', marginLeft: 12 }}>({friend.votes ?? 0} votes)</span></PersonName>
+                  <PersonName>{friend.username} <span style={{ color: '#ffcc00', marginLeft: 12 }}>({friend.votes ?? 0} {(friend.votes ?? 0) === 1 ? 'vote' : 'votes'})</span></PersonName>
                   <RetroButton
                     title="VOTE"
                     onClick={() => handleVote(friend.uid)}
